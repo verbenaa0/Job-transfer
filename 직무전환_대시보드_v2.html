@@ -1,0 +1,1305 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>직무전환 적합성 대시보드 | TPC메카트로닉스</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --navy:#1F3864;--navy2:#2d4f8a;--accent:#4f8ef7;--accent2:#00c6a2;
+  --bg:#f0f4fa;--card:#fff;--border:#e2e8f0;--text:#1a202c;--sub:#64748b;
+  --sp:#7c3aed;--sp-light:#ede9fe;
+}
+body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+/* 헤더 */
+.hdr{background:var(--navy);height:64px;padding:0 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(31,56,100,.2);}
+.hdr-left{display:flex;align-items:center;gap:12px;}
+.logo{width:36px;height:36px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#fff;}
+.hdr-title{font-size:16px;font-weight:700;color:#fff;}
+.hdr-sub{font-size:11px;color:rgba(255,255,255,.5);margin-top:1px;}
+.sp-badge{background:var(--sp);color:#fff;font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;}
+
+/* 데이터 관리 바 */
+.data-bar{background:#162d54;padding:8px 28px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.data-bar-label{font-size:11px;color:rgba(255,255,255,.4);margin-right:4px;}
+.db-btn{padding:5px 12px;border-radius:6px;font-size:11px;font-weight:700;border:none;cursor:pointer;font-family:inherit;transition:all .2s;}
+.db-btn.save{background:rgba(255,255,255,.15);color:#fff;}
+.db-btn.save:hover{background:rgba(255,255,255,.25);}
+.db-btn.danger{background:rgba(239,68,68,.2);color:#fca5a5;}
+.db-btn.danger:hover{background:rgba(239,68,68,.35);}
+.data-status{margin-left:auto;font-size:10px;color:rgba(255,255,255,.4);}
+
+/* 메인 */
+.main{padding:24px 28px;max-width:1400px;margin:0 auto;display:flex;flex-direction:column;gap:18px;}
+
+/* 스탯 */
+.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+.stat-card{background:var(--card);border-radius:14px;padding:18px 20px;border:1px solid var(--border);display:flex;align-items:center;gap:14px;box-shadow:0 1px 4px rgba(0,0,0,.05);transition:transform .2s,box-shadow .2s;}
+.stat-card:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.08);}
+.stat-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.stat-num{font-size:26px;font-weight:800;color:var(--navy);letter-spacing:-1px;line-height:1;}
+.stat-lbl{font-size:11px;color:var(--sub);margin-top:3px;font-weight:500;}
+
+/* 탐색기 카드 */
+.explorer{background:var(--card);border-radius:16px;border:1px solid var(--border);overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.06);}
+.ex-hdr{background:linear-gradient(135deg,var(--navy),var(--navy2));padding:18px 24px;}
+.ex-hdr h2{font-size:15px;font-weight:700;color:#fff;}
+.ex-hdr p{font-size:11px;color:rgba(255,255,255,.6);margin-top:2px;}
+.ex-body{padding:20px 24px;}
+
+/* 탭 */
+.tabs{display:flex;border-bottom:2px solid var(--border);margin-bottom:20px;}
+.tab{padding:10px 18px;font-size:13px;font-weight:600;color:var(--sub);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .2s;white-space:nowrap;}
+.tab.on{color:var(--navy);border-bottom-color:var(--navy);}
+.tp{display:none;}
+.tp.on{display:block;}
+
+/* 공통 */
+.divider{height:1px;background:var(--border);margin:18px 0;}
+select{appearance:none;border:2px solid var(--border);border-radius:10px;padding:11px 14px;font-size:13px;font-weight:600;color:var(--text);background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 12px center;cursor:pointer;font-family:inherit;transition:border-color .2s;width:100%;}
+select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(79,142,247,.1);}
+.sel-lbl{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:5px;}
+.sel-lbl.from{color:var(--accent);}
+.sel-lbl.to{color:var(--accent2);}
+.arrow-wrap{display:flex;align-items:flex-end;justify-content:center;padding-bottom:2px;}
+.arrow-ic{width:38px;height:38px;background:var(--bg);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--navy);border:2px solid var(--border);transition:all .3s;}
+.arrow-ic.on{background:var(--navy);color:#fff;border-color:var(--navy);}
+.sel-row{display:grid;grid-template-columns:1fr 50px 1fr;align-items:end;gap:0;margin-bottom:18px;}
+
+/* 결과 */
+.result-wrap{display:none;}
+.result-wrap.on{display:block;animation:fadeUp .4s ease;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.score-grid{display:grid;grid-template-columns:170px 1fr;gap:20px;}
+.sc-wrap{display:flex;flex-direction:column;align-items:center;gap:10px;}
+.sc-circle{width:150px;height:150px;position:relative;}
+.sc-circle svg{width:100%;height:100%;transform:rotate(-90deg);}
+.sc-track{fill:none;stroke:#e2e8f0;stroke-width:12;}
+.sc-fill{fill:none;stroke-width:12;stroke-linecap:round;transition:stroke-dashoffset 1s cubic-bezier(.4,0,.2,1);}
+.sc-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;}
+.sc-num{font-size:32px;font-weight:800;color:var(--navy);line-height:1;}
+.sc-denom{font-size:11px;color:var(--sub);}
+.verdict{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;text-align:center;}
+.bd-ttl{font-size:10px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;}
+.bd-item{margin-bottom:8px;}
+.bd-row{display:flex;justify-content:space-between;margin-bottom:3px;}
+.bd-name{font-size:12px;font-weight:600;}
+.bd-pts{font-size:12px;font-weight:700;color:var(--navy);}
+.bar-tr{height:5px;background:#e2e8f0;border-radius:99px;overflow:hidden;}
+.bar-fl{height:100%;border-radius:99px;transition:width .8s cubic-bezier(.4,0,.2,1);}
+.ic-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;}
+.ic{background:var(--bg);border-radius:10px;padding:10px 12px;border:1px solid var(--border);}
+.ic-lbl{font-size:10px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;}
+.ic-val{font-size:12px;font-weight:600;color:var(--text);line-height:1.4;}
+.sp-banner{background:linear-gradient(135deg,var(--sp-light),#f5f3ff);border:1.5px solid var(--sp);border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px;margin-top:10px;}
+.sp-t{font-size:12px;font-weight:700;color:var(--sp);}
+.sp-s{font-size:11px;color:#7c3aed88;margin-top:1px;}
+.ph{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:36px;color:var(--sub);}
+.ph-icon{font-size:36px;margin-bottom:10px;opacity:.35;}
+.ph-txt{font-size:13px;text-align:center;opacity:.6;line-height:1.6;}
+
+/* NCS 패널 */
+.ncs-panel{background:#fff;border:2px solid #bae6fd;border-radius:14px;overflow:hidden;margin-top:16px;}
+.ncs-hdr{background:linear-gradient(135deg,#0369a1,#0284c7);padding:12px 18px;display:flex;align-items:center;gap:10px;}
+.ncs-hdr-t{font-size:13px;font-weight:700;color:#fff;}
+.ncs-hdr-s{font-size:10px;color:rgba(255,255,255,.65);margin-top:2px;}
+.ncs-body{padding:16px 18px;display:flex;flex-direction:column;gap:12px;}
+.ncs-sec{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;}
+.ncs-lv{display:inline-flex;padding:6px 12px;border-radius:8px;font-size:12px;font-weight:700;}
+.ncs-cl{font-size:11px;color:var(--sub);}
+.ncs-units{display:flex;flex-wrap:wrap;gap:5px;}
+.ncs-tag{padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;border:1.5px solid;}
+.ncs-tag.sh{background:#e0f2fe;border-color:#38bdf8;color:#0369a1;}
+.ncs-tag.of{background:#f5f3ff;border-color:#c4b5fd;color:#6d28d9;}
+.ncs-tag.ot{background:#f0fdfa;border-color:#5eead4;color:#0f766e;}
+.ncs-2col{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+
+/* 대상자 채점 */
+.inp-2col{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:14px;}
+.inp-lbl{font-size:10px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.8px;margin-bottom:7px;}
+.b-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+.b-sel-wrap{display:flex;flex-direction:column;gap:3px;}
+.b-sel-lbl{font-size:10px;color:var(--sub);font-weight:600;}
+.bsel{appearance:none;border:1.5px solid var(--border);border-radius:8px;padding:7px 10px;font-size:12px;font-weight:600;color:var(--text);background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 8px center;cursor:pointer;font-family:inherit;width:100%;transition:border-color .2s;}
+.bsel:focus{outline:none;border-color:var(--accent);}
+.apt-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;}
+.apt-item{display:flex;flex-direction:column;gap:3px;}
+.apt-nm{font-size:10px;font-weight:700;color:var(--sub);}
+.apt-in{border:1.5px solid var(--border);border-radius:7px;padding:7px 8px;font-size:13px;font-weight:700;color:var(--navy);text-align:center;width:100%;font-family:inherit;transition:border-color .2s;}
+.apt-in:focus{outline:none;border-color:var(--accent);}
+.apt-in.key{border-color:var(--accent2);background:#f0fdf9;}
+.apt-lv{font-size:9px;font-weight:700;text-align:center;border-radius:4px;padding:1px 4px;}
+.hint{font-size:10px;color:var(--sub);margin-top:5px;}
+.big-btn{background:var(--navy);color:#fff;border:none;border-radius:10px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-top:4px;transition:all .2s;}
+.big-btn:hover{background:var(--navy2);transform:translateY(-1px);}
+.big-btn.green{background:#059669;}
+.big-btn.green:hover{background:#047857;}
+.big-btn.blue{background:#0369a1;}
+.big-btn.blue:hover{background:#0284c7;}
+.btn-group{display:flex;flex-direction:column;gap:8px;margin-top:8px;}
+
+/* 후보군 */
+.pool-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px;}
+.ps-card{background:var(--bg);border-radius:10px;padding:12px;border:1px solid var(--border);text-align:center;}
+.ps-num{font-size:22px;font-weight:800;color:var(--navy);line-height:1;}
+.ps-lbl{font-size:10px;color:var(--sub);margin-top:2px;}
+.toolbar{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
+.pool-search{flex:1;min-width:180px;border:1.5px solid var(--border);border-radius:8px;padding:8px 12px;font-size:12px;font-family:inherit;}
+.pool-search:focus{outline:none;border-color:var(--accent);}
+.fsel{border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:11px;font-family:inherit;cursor:pointer;background:#fff;appearance:none;padding-right:24px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 6px center;}
+.sm-btn{padding:7px 14px;border-radius:8px;font-size:11px;font-weight:700;border:none;cursor:pointer;font-family:inherit;white-space:nowrap;}
+.sm-btn.primary{background:var(--navy);color:#fff;}
+.sm-btn.success{background:#059669;color:#fff;}
+.tbl-wrap{overflow-x:auto;border-radius:12px;border:1px solid var(--border);}
+.tbl{width:100%;border-collapse:collapse;font-size:12px;}
+.tbl th{background:var(--navy);color:#fff;padding:10px 12px;text-align:left;font-size:10px;font-weight:700;white-space:nowrap;}
+.tbl td{padding:9px 12px;border-bottom:1px solid var(--border);vertical-align:middle;}
+.tbl tr:last-child td{border-bottom:none;}
+.tbl tr:hover td{background:#f8fafc;}
+.v-badge{padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;white-space:nowrap;}
+.act-btn{padding:3px 9px;border-radius:6px;border:1px solid var(--border);background:#fff;font-size:10px;font-weight:600;cursor:pointer;font-family:inherit;}
+.act-btn.del{color:#dc2626;border-color:#fca5a5;}
+.pool-empty{text-align:center;padding:36px;color:var(--sub);}
+
+/* 다중 비교 */
+.cmp-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:16px;}
+.cmp-card{background:var(--bg);border:2px solid var(--border);border-radius:14px;padding:16px;transition:border-color .2s;}
+.cmp-card.on{border-color:var(--accent);background:#fff;}
+.cmp-card-num{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;}
+.cmp-name{border:1.5px solid var(--border);border-radius:7px;padding:7px 10px;font-size:12px;font-family:inherit;width:100%;margin-top:8px;}
+.cmp-name:focus{outline:none;border-color:var(--accent);}
+.cmp-score-box{text-align:center;padding:12px;background:var(--navy);border-radius:10px;margin-top:8px;}
+.cmp-score-big{font-size:30px;font-weight:800;color:#fff;line-height:1;}
+.cmp-verdict-sm{padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;margin-top:5px;display:inline-block;}
+.cmp-result{display:none;}
+.cmp-result.on{display:block;animation:fadeUp .4s ease;}
+.rank-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;}
+.rank-card{background:#fff;border-radius:14px;padding:16px;text-align:center;border:2px solid var(--border);}
+.cmp-tbl-wrap{overflow-x:auto;border-radius:12px;border:1px solid var(--border);margin-bottom:16px;}
+.bar-cmp{display:flex;align-items:center;gap:8px;}
+.bar-cmp-tr{flex:1;height:7px;background:#e2e8f0;border-radius:99px;overflow:hidden;}
+.bar-cmp-fl{height:100%;border-radius:99px;transition:width .8s cubic-bezier(.4,0,.2,1);}
+.radar-sec{background:var(--card);border-radius:14px;border:1px solid var(--border);padding:18px;}
+.radar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.radar-lbl{font-size:10px;font-weight:600;color:var(--sub);min-width:80px;}
+.radar-bars{flex:1;display:flex;flex-direction:column;gap:3px;}
+.radar-bar-item{display:flex;align-items:center;gap:6px;}
+.radar-bar-nm{font-size:9px;min-width:46px;}
+.radar-bar-tr{flex:1;height:5px;background:#e2e8f0;border-radius:99px;overflow:hidden;}
+.radar-bar-fl{height:100%;border-radius:99px;transition:width .8s;}
+.radar-bar-pts{font-size:9px;font-weight:700;min-width:24px;text-align:right;}
+
+/* 네트워크 */
+.net-wrap{background:#fff;border-radius:14px;border:1px solid var(--border);overflow:hidden;}
+.net-toolbar{padding:12px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.net-toolbar h3{font-size:13px;font-weight:700;color:var(--navy);margin-right:auto;}
+.net-btn{padding:5px 12px;border-radius:20px;font-size:11px;font-weight:700;border:1.5px solid var(--border);background:#fff;cursor:pointer;transition:all .2s;font-family:inherit;}
+.net-btn.on{background:var(--navy);color:#fff;border-color:var(--navy);}
+#netCanvas{width:100%;height:500px;display:block;cursor:grab;}
+#netCanvas:active{cursor:grabbing;}
+.net-legend{padding:10px 18px;border-top:1px solid var(--border);display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:var(--bg);}
+.net-leg{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--sub);}
+.net-leg-line{width:22px;height:3px;border-radius:2px;}
+.net-tip{position:absolute;background:rgba(31,56,100,.95);color:#fff;padding:8px 12px;border-radius:8px;font-size:11px;pointer-events:none;display:none;z-index:10;line-height:1.5;max-width:180px;}
+
+/* 모달 */
+.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:1000;display:none;align-items:center;justify-content:center;}
+.modal-overlay.on{display:flex;}
+.modal{background:#fff;border-radius:16px;width:90%;max-width:720px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3);}
+.modal-hdr{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:1;}
+.modal-hdr h3{font-size:15px;font-weight:700;color:var(--navy);}
+.modal-close{width:30px;height:30px;border-radius:50%;border:none;background:var(--bg);cursor:pointer;font-size:15px;}
+.modal-body{padding:22px;}
+.modal-footer{padding:14px 22px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;position:sticky;bottom:0;background:#fff;}
+.fg{display:flex;flex-direction:column;gap:4px;margin-bottom:10px;}
+.fg-lbl{font-size:10px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;}
+.fg-in{border:1.5px solid var(--border);border-radius:8px;padding:9px 12px;font-size:13px;font-family:inherit;color:var(--text);transition:border-color .2s;width:100%;}
+.fg-in:focus{outline:none;border-color:var(--accent);}
+.fg-ta{border:1.5px solid var(--border);border-radius:8px;padding:9px 12px;font-size:12px;font-family:inherit;color:var(--text);resize:vertical;min-height:56px;width:100%;}
+.fg-ta:focus{outline:none;border-color:var(--accent);}
+.fg-2col{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.cancel-btn{background:var(--bg);color:var(--sub);border:1px solid var(--border);border-radius:8px;padding:10px 20px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;}
+.ok-btn{background:var(--navy);color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;}
+.ok-btn.blue{background:#0369a1;}
+/* PDF 미리보기 */
+.pdf-preview{background:#f8fafc;border:1px solid var(--border);border-radius:12px;padding:0;overflow:hidden;margin-bottom:16px;}
+.pdf-doc{background:#fff;margin:14px;border-radius:8px;padding:24px;box-shadow:0 2px 8px rgba(0,0,0,.08);font-size:11px;line-height:1.6;}
+.pdf-hdr-bar{background:var(--navy);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;border-radius:5px 5px 0 0;margin:-24px -24px 18px;}
+.pdf-hdr-t{font-size:15px;font-weight:800;color:#fff;}
+.pdf-hdr-s{font-size:10px;color:rgba(255,255,255,.6);margin-top:2px;}
+.pdf-sec-t{font-size:10px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.8px;border-bottom:1.5px solid var(--navy);padding-bottom:3px;margin:14px 0 8px;}
+.pdf-field{display:flex;gap:8px;margin-bottom:3px;}
+.pdf-fl{font-size:9px;color:var(--sub);font-weight:600;min-width:60px;}
+.pdf-fv{font-size:11px;font-weight:600;}
+.pdf-path{background:linear-gradient(135deg,#eff6ff,#f0fdf4);border:1px solid var(--border);border-radius:8px;padding:10px 14px;display:flex;align-items:center;gap:12px;}
+.pdf-sc-row{display:flex;align-items:center;gap:8px;margin-bottom:5px;}
+.pdf-sc-lbl{font-size:10px;font-weight:600;min-width:100px;}
+.pdf-sc-tr{flex:1;height:7px;background:#e2e8f0;border-radius:99px;overflow:hidden;}
+.pdf-sc-fl{height:100%;border-radius:99px;}
+.pdf-sc-pts{font-size:10px;font-weight:700;min-width:40px;text-align:right;}
+.pdf-total{background:var(--navy);border-radius:8px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;margin-top:6px;}
+.pdf-result-opts{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;}
+.pdf-opt{border:1.5px solid var(--border);border-radius:7px;padding:8px 4px;font-size:10px;font-weight:600;color:var(--sub);text-align:center;cursor:pointer;transition:all .2s;}
+.pdf-opt.on{border-color:var(--navy);background:var(--navy);color:#fff;}
+.pdf-sign{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.pdf-sign-box{border:1px solid var(--border);border-radius:7px;padding:8px 10px;text-align:center;}
+.pdf-sign-role{font-size:9px;color:var(--sub);font-weight:600;margin-bottom:14px;}
+.pdf-sign-line{border-bottom:1px solid var(--border);margin-bottom:3px;height:20px;}
+
+/* 하단 */
+.bottom-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.bot-card{background:var(--card);border-radius:16px;border:1px solid var(--border);overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.06);}
+.bot-hdr{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;}
+.bot-hdr h3{font-size:13px;font-weight:700;color:var(--navy);}
+.bot-body{padding:14px 18px;}
+.path-list{display:flex;flex-direction:column;gap:7px;max-height:300px;overflow-y:auto;}
+.path-item{display:flex;align-items:center;gap:7px;padding:8px 11px;border-radius:8px;background:var(--bg);border:1px solid var(--border);cursor:pointer;transition:all .2s;font-size:11px;font-weight:600;}
+.path-item:hover{background:#fff;border-color:var(--accent);}
+.pf{color:var(--accent);}
+.pa{color:var(--sub);}
+.pt{color:var(--accent2);}
+.pb{margin-left:auto;padding:2px 7px;border-radius:20px;font-size:9px;font-weight:700;background:var(--sp-light);color:var(--sp);}
+.job-grid{display:flex;flex-wrap:wrap;gap:6px;}
+.job-tag{padding:4px 10px;border-radius:7px;font-size:10px;font-weight:600;cursor:pointer;transition:all .2s;border:1.5px solid transparent;}
+.job-tag:hover{transform:translateY(-1px);box-shadow:0 2px 6px rgba(0,0,0,.1);}
+.leg{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px;}
+.leg-item{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--sub);}
+.leg-dot{width:8px;height:8px;border-radius:3px;}
+
+/* 토스트 */
+.toast{position:fixed;bottom:22px;right:22px;background:var(--navy);color:#fff;padding:11px 18px;border-radius:10px;font-size:12px;font-weight:600;z-index:9999;opacity:0;transform:translateY(8px);transition:all .3s;pointer-events:none;}
+.toast.on{opacity:1;transform:translateY(0);}
+
+/* 추가 모달 */
+.add-modal{background:#fff;border-radius:16px;width:90%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3);}
+</style>
+</head>
+<body>
+
+<!-- 헤더 -->
+<div class="hdr">
+  <div class="hdr-left">
+    <div class="logo">T</div>
+    <div><div class="hdr-title">직무전환 적합성 대시보드</div><div class="hdr-sub">TPC메카트로닉스 · 인사총무팀</div></div>
+  </div>
+  <span class="sp-badge">전략순환 구간 v1.0</span>
+</div>
+
+<!-- 데이터 관리 바 -->
+<div class="data-bar">
+  <span class="data-bar-label">💾 데이터 관리</span>
+  <button class="db-btn save" onclick="exportJSON()">📥 JSON 저장</button>
+  <button class="db-btn save" onclick="document.getElementById('jsonInput').click()">📂 JSON 불러오기</button>
+  <button class="db-btn save" onclick="exportCSV()">📊 CSV 내보내기</button>
+  <button class="db-btn danger" onclick="resetAll()">🗑 초기화</button>
+  <input type="file" id="jsonInput" accept=".json" style="display:none" onchange="importJSON(this)">
+  <div class="data-status" id="dataStatus">저장된 데이터 없음</div>
+</div>
+
+<!-- 메인 -->
+<div class="main">
+
+  <!-- 스탯 -->
+  <div class="stat-row">
+    <div class="stat-card"><div class="stat-icon" style="background:#eff6ff">📋</div><div><div class="stat-num">32</div><div class="stat-lbl">전환단위 (전체)</div></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#f0fdf4">🔗</div><div><div class="stat-num">68</div><div class="stat-lbl">선별된 직무쌍</div></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#fdf4ff">⭐</div><div><div class="stat-num" style="color:var(--sp)">12</div><div class="stat-lbl">전략순환 구간</div></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#fff7ed">🏢</div><div><div class="stat-num">8</div><div class="stat-lbl">참여 본부</div></div></div>
+  </div>
+
+  <!-- 탐색기 -->
+  <div class="explorer">
+    <div class="ex-hdr"><h2>🔍 직무전환 적합성 탐색기</h2><p>직무 탐색 · 대상자 채점 · 후보군 관리 · 다중 비교 · 전환 경로 맵</p></div>
+    <div class="ex-body">
+
+      <!-- 탭 버튼 -->
+      <div class="tabs">
+        <div class="tab on" onclick="sw('explore')">직무 탐색</div>
+        <div class="tab" onclick="sw('score')">대상자 채점</div>
+        <div class="tab" onclick="sw('pool')">후보군 관리</div>
+        <div class="tab" onclick="sw('compare')">다중 비교</div>
+        <div class="tab" onclick="sw('network')">전환 경로 맵</div>
+      </div>
+
+      <!-- 탭1: 직무 탐색 -->
+      <div class="tp on" id="tp-explore">
+        <div class="sel-row">
+          <div><div class="sel-lbl from">FROM · 전환 전 직무</div><select id="s-from" onchange="calc()"></select></div>
+          <div class="arrow-wrap"><div class="arrow-ic" id="arrowIc">→</div></div>
+          <div><div class="sel-lbl to">TO · 전환 후 직무</div><select id="s-to" onchange="calc()"></select></div>
+        </div>
+        <div class="result-wrap" id="rw-explore">
+          <div class="divider"></div>
+          <div class="score-grid">
+            <div class="sc-wrap">
+              <div class="sc-circle"><svg viewBox="0 0 150 150"><circle class="sc-track" cx="75" cy="75" r="61"/><circle class="sc-fill" id="arc1" cx="75" cy="75" r="61" stroke-dasharray="383" stroke-dashoffset="383"/></svg><div class="sc-center"><div class="sc-num" id="num1">0</div><div class="sc-denom">/100</div></div></div>
+              <div class="verdict" id="vd1">—</div>
+              <div style="font-size:10px;color:var(--sub);text-align:center;line-height:1.5;margin-top:4px">직무 기준 예상 점수<br>실제 채점→대상자 채점 탭</div>
+            </div>
+            <div>
+              <div class="bd-ttl">점수 구성 (예상)</div>
+              <div class="bd-item"><div class="bd-row"><span class="bd-name">버크만 흥미</span><span class="bd-pts" id="e-p1">—</span></div><div class="bar-tr"><div class="bar-fl" id="e-b1" style="background:#4f8ef7;width:0%"></div></div></div>
+              <div class="bd-item"><div class="bd-row"><span class="bd-name">버크만 성향</span><span class="bd-pts" id="e-p2">—</span></div><div class="bar-tr"><div class="bar-fl" id="e-b2" style="background:#06b6d4;width:0%"></div></div></div>
+              <div class="bd-item"><div class="bd-row"><span class="bd-name">직업적성 핵심</span><span class="bd-pts" id="e-p3">—</span></div><div class="bar-tr"><div class="bar-fl" id="e-b3" style="background:#00c6a2;width:0%"></div></div></div>
+              <div class="bd-item"><div class="bd-row"><span class="bd-name">직업적성 참고</span><span class="bd-pts" id="e-p4">—</span></div><div class="bar-tr"><div class="bar-fl" id="e-b4" style="background:#a3e635;width:0%"></div></div></div>
+              <div class="ic-grid">
+                <div class="ic"><div class="ic-lbl">전환 방향</div><div class="ic-val" id="ic-dir">—</div></div>
+                <div class="ic"><div class="ic-lbl">NCS 일치</div><div class="ic-val" id="ic-ncs">—</div></div>
+                <div class="ic"><div class="ic-lbl">핵심 적성요인</div><div class="ic-val" id="ic-apt">—</div></div>
+                <div class="ic"><div class="ic-lbl">버크만 흥미</div><div class="ic-val" id="ic-brk">—</div></div>
+              </div>
+              <div class="sp-banner" id="sp-banner1" style="display:none"><span style="font-size:18px">⭐</span><div><div class="sp-t">전략순환 구간</div><div class="sp-s">회사가 전략적으로 집중하는 핵심 전환 경로</div></div></div>
+            </div>
+          </div>
+          <!-- NCS 패널 -->
+          <div class="ncs-panel" id="ncs-panel" style="display:none">
+            <div class="ncs-hdr"><span style="font-size:20px">📚</span><div><div class="ncs-hdr-t">NCS 기반 전환 당위성</div><div class="ncs-hdr-s">ncs.go.kr 분류체계 기준 · 공유 능력단위가 많을수록 전환 적응 부담 낮음</div></div></div>
+            <div class="ncs-body">
+              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><div class="ncs-lv" id="ncs-lv">—</div><div class="ncs-cl" id="ncs-cl"></div></div>
+              <div><div class="ncs-sec" style="color:#0369a1">🔵 공유 능력단위 <span style="font-size:9px;font-weight:400;color:var(--sub)">(두 직무 공통 — 전환 시 즉시 활용)</span></div><div class="ncs-units" id="ncs-shared"></div></div>
+              <div id="ncs-only-wrap" style="display:none">
+                <div style="height:1px;background:var(--border);margin-bottom:12px"></div>
+                <div class="ncs-2col">
+                  <div><div class="ncs-sec" style="color:#6d28d9">🟣 FROM 전용 <span style="font-size:9px;font-weight:400;color:var(--sub)">(기존 보유)</span></div><div class="ncs-units" id="ncs-onlyF"></div></div>
+                  <div><div class="ncs-sec" style="color:#0f766e">🟢 TO 전용 <span style="font-size:9px;font-weight:400;color:var(--sub)">(신규 습득 필요)</span></div><div class="ncs-units" id="ncs-onlyT"></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="ph" id="ph-explore"><div class="ph-icon">🔄</div><div class="ph-txt">FROM과 TO 직무를 선택하면<br>전환 적합성이 자동으로 분석됩니다</div></div>
+      </div>
+
+      <!-- 탭2: 대상자 채점 -->
+      <div class="tp" id="tp-score">
+        <div class="inp-2col">
+          <div>
+            <div class="sel-row" style="margin-bottom:14px">
+              <div><div class="sel-lbl from">FROM</div><select id="s-from2" onchange="syncAndHL()"></select></div>
+              <div class="arrow-wrap"><div class="arrow-ic on">→</div></div>
+              <div><div class="sel-lbl to">TO</div><select id="s-to2" onchange="syncAndHL()"></select></div>
+            </div>
+            <div class="inp-lbl">버크만 베이직 결과</div>
+            <div class="b-grid">
+              <div class="b-sel-wrap"><div class="b-sel-lbl">흥미 1순위</div><select class="bsel" id="bi1"><option value="">선택</option><option>설득</option><option>관리</option><option>숫자</option><option>문학</option><option>예술</option><option>사회복지</option><option>과학</option><option>기술</option><option>음악</option><option>야외</option></select></div>
+              <div class="b-sel-wrap"><div class="b-sel-lbl">흥미 2순위</div><select class="bsel" id="bi2"><option value="">선택</option><option>설득</option><option>관리</option><option>숫자</option><option>문학</option><option>예술</option><option>사회복지</option><option>과학</option><option>기술</option><option>음악</option><option>야외</option></select></div>
+              <div class="b-sel-wrap"><div class="b-sel-lbl">흥미 3순위</div><select class="bsel" id="bi3"><option value="">선택</option><option>설득</option><option>관리</option><option>숫자</option><option>문학</option><option>예술</option><option>사회복지</option><option>과학</option><option>기술</option><option>음악</option><option>야외</option></select></div>
+              <div class="b-sel-wrap"><div class="b-sel-lbl">일하는 방식</div><select class="bsel" id="bw"><option value="">선택</option><option>운영/기술</option><option>영업/마케팅</option><option>관리/회계</option><option>기획/전략</option></select></div>
+              <div class="b-sel-wrap"><div class="b-sel-lbl">대인관계 방식</div><select class="bsel" id="br"><option value="">선택</option><option>Results</option><option>Inspire</option><option>Details</option><option>Strategy</option></select></div>
+            </div>
+          </div>
+          <div>
+            <div class="inp-lbl">직업적성검사 변환점수 <span id="keyHint" style="color:var(--accent2);font-size:9px;font-weight:700"></span></div>
+            <div class="apt-grid" id="aptGrid"></div>
+            <div class="hint">※ 초록 테두리 = TO 직무 핵심 적성요인</div>
+          </div>
+        </div>
+        <button class="big-btn" onclick="calcReal()">🧮 채점하기</button>
+        <div class="btn-group" id="scoreActionBtns" style="display:none">
+          <button class="big-btn blue" onclick="openPdfModal()">📄 전환결과서 출력 (PDF)</button>
+          <button class="big-btn green" onclick="addFromScore()">👥 후보군 POOL에 추가</button>
+        </div>
+        <div class="result-wrap" id="rw-score" style="margin-top:16px">
+          <div class="divider"></div>
+          <div class="score-grid">
+            <div class="sc-wrap">
+              <div class="sc-circle"><svg viewBox="0 0 150 150"><circle class="sc-track" cx="75" cy="75" r="61"/><circle class="sc-fill" id="arc2" cx="75" cy="75" r="61" stroke-dasharray="383" stroke-dashoffset="383"/></svg><div class="sc-center"><div class="sc-num" id="num2">0</div><div class="sc-denom">/100</div></div></div>
+              <div class="verdict" id="vd2">—</div>
+            </div>
+            <div>
+              <div class="bd-ttl">실제 채점 결과</div>
+              <div class="bd-item"><div class="bd-row"><span class="bd-name">버크만 흥미</span><span class="bd-pts" id="r-p1">—</span></div><div class="bar-tr"><div class="bar-fl" id="r-b1" style="background:#4f8ef7;width:0%"></div></div></div>
+              <div class="bd-item"><div class="bd-row"><span class="bd-name">버크만 성향</span><span class="bd-pts" id="r-p2">—</span></div><div class="bar-tr"><div class="bar-fl" id="r-b2" style="background:#06b6d4;width:0%"></div></div></div>
+              <div class="bd-item"><div class="bd-row"><span class="bd-name">직업적성 핵심</span><span class="bd-pts" id="r-p3">—</span></div><div class="bar-tr"><div class="bar-fl" id="r-b3" style="background:#00c6a2;width:0%"></div></div></div>
+              <div class="bd-item"><div class="bd-row"><span class="bd-name">직업적성 참고</span><span class="bd-pts" id="r-p4">—</span></div><div class="bar-tr"><div class="bar-fl" id="r-b4" style="background:#a3e635;width:0%"></div></div></div>
+              <div class="ic-grid">
+                <div class="ic"><div class="ic-lbl">흥미 일치</div><div class="ic-val" id="r-int">—</div></div>
+                <div class="ic"><div class="ic-lbl">성향 일치</div><div class="ic-val" id="r-sty">—</div></div>
+                <div class="ic"><div class="ic-lbl">핵심요인 점수</div><div class="ic-val" id="r-apt">—</div></div>
+                <div class="ic"><div class="ic-lbl">NCS 분류</div><div class="ic-val" id="r-ncs">—</div></div>
+              </div>
+              <div class="sp-banner" id="sp-banner2" style="display:none"><span style="font-size:18px">⭐</span><div><div class="sp-t">전략순환 구간</div><div class="sp-s">회사가 전략적으로 집중하는 핵심 전환 경로</div></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 탭3: 후보군 관리 -->
+      <div class="tp" id="tp-pool">
+        <div class="pool-stats">
+          <div class="ps-card"><div class="ps-num" id="ps-total">0</div><div class="ps-lbl">전체 대상자</div></div>
+          <div class="ps-card"><div class="ps-num" style="color:#16a34a" id="ps-rec">0</div><div class="ps-lbl">✅ 전환 추천</div></div>
+          <div class="ps-card"><div class="ps-num" style="color:#2563eb" id="ps-ok">0</div><div class="ps-lbl">🔵 전환 가능</div></div>
+          <div class="ps-card"><div class="ps-num" style="color:#ca8a04" id="ps-cond">0</div><div class="ps-lbl">🟡 조건부·보류</div></div>
+        </div>
+        <div class="toolbar">
+          <input class="pool-search" id="poolSearch" placeholder="🔍 이름·직무·부서 검색..." oninput="renderPool()">
+          <select class="fsel" id="poolFilter" onchange="renderPool()"><option value="">전체 판정</option><option>✅ 전환 추천</option><option>🔵 전환 가능</option><option>🟡 조건부 검토</option><option>❌ 전환 보류</option></select>
+          <select class="fsel" id="poolSpFilter" onchange="renderPool()"><option value="">전체</option><option value="sp">⭐ 전략순환만</option></select>
+          <button class="sm-btn primary" onclick="openAddModal()">+ 추가</button>
+          <button class="sm-btn success" onclick="exportCSV()">📥 CSV</button>
+        </div>
+        <div class="tbl-wrap">
+          <table class="tbl">
+            <thead><tr><th>No.</th><th>성명</th><th>소속</th><th>FROM</th><th>TO</th><th>총점</th><th>판정</th><th>전략순환</th><th>NCS</th><th>비고</th><th>관리</th></tr></thead>
+            <tbody id="poolTbody"></tbody>
+          </table>
+          <div class="pool-empty" id="poolEmpty" style="display:none"><div style="font-size:32px;opacity:.3;margin-bottom:8px">👥</div><div style="font-size:13px;font-weight:600;margin-bottom:4px">등록된 대상자가 없습니다</div><div style="font-size:11px;color:var(--sub)">채점 후 추가하거나 직접 입력하세요</div></div>
+        </div>
+      </div>
+
+      <!-- 탭4: 다중 비교 -->
+      <div class="tp" id="tp-compare">
+        <div style="font-size:12px;color:var(--sub);margin-bottom:14px">최대 3명을 동시 비교합니다. 직무와 이름을 입력 후 비교하기를 클릭하세요.</div>
+        <div class="cmp-cards" id="cmpCards"></div>
+        <button class="big-btn" onclick="runCompare()">📊 비교하기</button>
+        <div class="cmp-result" id="cmpResult">
+          <div class="divider"></div>
+          <div class="rank-row" id="rankRow"></div>
+          <div class="cmp-tbl-wrap"><table class="tbl"><thead><tr><th>항목</th><th>만점</th><th id="cth0">—</th><th id="cth1">—</th><th id="cth2">—</th></tr></thead><tbody id="cmpTbody"></tbody></table></div>
+          <div class="radar-sec"><div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:14px">📊 항목별 점수 비교</div><div id="radarBars"></div></div>
+        </div>
+      </div>
+
+      <!-- 탭5: 전환 경로 맵 -->
+      <div class="tp" id="tp-network">
+        <div class="net-wrap" style="position:relative">
+          <div class="net-toolbar">
+            <h3>🗺 직무 전환 경로 네트워크</h3>
+            <button class="net-btn on" id="nf-all" onclick="setNF('all')">전체</button>
+            <button class="net-btn" id="nf-sp" onclick="setNF('sp')">⭐ 전략순환만</button>
+            <button class="net-btn" id="nf-grp" onclick="setNF('grp')">직무군 색상</button>
+            <button class="net-btn" onclick="resetNet()" style="margin-left:auto">↺ 초기화</button>
+          </div>
+          <canvas id="netCanvas"></canvas>
+          <div class="net-tip" id="netTip"></div>
+          <div class="net-legend">
+            <div class="net-leg"><div class="net-leg-line" style="background:#7c3aed"></div>전략순환 구간</div>
+            <div class="net-leg"><div class="net-leg-line" style="background:#94a3b8"></div>일반 경로</div>
+            <div class="net-leg"><span style="font-size:10px">● 클릭 시 연결 강조 · 드래그 이동 · 스크롤 줌</span></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 하단 -->
+  <div class="bottom-row">
+    <div class="bot-card">
+      <div class="bot-hdr"><span style="font-size:16px">⭐</span><h3>전략순환 구간 경로</h3></div>
+      <div class="bot-body"><div class="path-list" id="pathList"></div></div>
+    </div>
+    <div class="bot-card">
+      <div class="bot-hdr"><span style="font-size:16px">🏗</span><h3>직무군 분포</h3></div>
+      <div class="bot-body"><div class="job-grid" id="jobGrid"></div><div class="leg" id="jobLeg"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- PDF 모달 -->
+<div class="modal-overlay" id="pdfModal">
+  <div class="modal">
+    <div class="modal-hdr"><h3>📄 직무전환 결과서 출력</h3><button class="modal-close" onclick="closeModal('pdfModal')">✕</button></div>
+    <div class="modal-body">
+      <div class="fg-2col" style="margin-bottom:10px">
+        <div class="fg"><div class="fg-lbl">성명 *</div><input class="fg-in" id="pf-name" placeholder="홍길동"></div>
+        <div class="fg"><div class="fg-lbl">사번</div><input class="fg-in" id="pf-id" placeholder="선택 입력"></div>
+        <div class="fg"><div class="fg-lbl">소속 부서 *</div><input class="fg-in" id="pf-dept" placeholder="생산팀"></div>
+        <div class="fg"><div class="fg-lbl">현재 직무</div><input class="fg-in" id="pf-job" placeholder="자동 입력"></div>
+      </div>
+      <div class="fg"><div class="fg-lbl">HR 담당자 의견</div><textarea class="fg-ta" id="pf-hr" placeholder="사전 검토 의견..."></textarea></div>
+      <div class="fg"><div class="fg-lbl">심의위원회 의견</div><textarea class="fg-ta" id="pf-committee" placeholder="심의 당일 기재"></textarea></div>
+      <div class="fg">
+        <div class="fg-lbl">심의 결과</div>
+        <div class="pdf-result-opts" style="margin-top:4px">
+          <div class="pdf-opt" id="ro-approve" onclick="setPdfResult('approve')">✅ 승인</div>
+          <div class="pdf-opt" id="ro-cond" onclick="setPdfResult('cond')">🔵 조건부</div>
+          <div class="pdf-opt" id="ro-hold" onclick="setPdfResult('hold')">🟡 보류</div>
+          <div class="pdf-opt" id="ro-reject" onclick="setPdfResult('reject')">❌ 반려</div>
+        </div>
+      </div>
+      <div style="font-size:11px;font-weight:700;color:var(--navy);margin:14px 0 10px">미리보기</div>
+      <div class="pdf-preview"><div class="pdf-doc" id="pdfDoc">
+        <div class="pdf-hdr-bar"><div><div class="pdf-hdr-t">직무전환 적합성 결과서</div><div class="pdf-hdr-s">TPC메카트로닉스 · 인사총무팀</div></div><div style="font-size:10px;color:rgba(255,255,255,.7);text-align:right" id="pd-date"></div></div>
+        <div class="pdf-sec-t">대상자 정보</div>
+        <div class="fg-2col">
+          <div class="pdf-field"><span class="pdf-fl">성명</span><span class="pdf-fv" id="pd-name">—</span></div>
+          <div class="pdf-field"><span class="pdf-fl">사번</span><span class="pdf-fv" id="pd-id">—</span></div>
+          <div class="pdf-field"><span class="pdf-fl">소속</span><span class="pdf-fv" id="pd-dept">—</span></div>
+          <div class="pdf-field"><span class="pdf-fl">현재직무</span><span class="pdf-fv" id="pd-job">—</span></div>
+        </div>
+        <div class="pdf-sec-t">전환 경로</div>
+        <div class="pdf-path"><div><div style="font-size:9px;color:var(--sub)">FROM</div><div style="font-size:13px;font-weight:700;color:var(--accent)" id="pd-from">—</div></div><div style="font-size:18px;color:var(--sub)">→</div><div><div style="font-size:9px;color:var(--sub)">TO</div><div style="font-size:13px;font-weight:700;color:var(--accent2)" id="pd-to">—</div></div><div style="margin-left:auto"><div id="pd-sp" style="display:none;background:var(--sp-light);color:var(--sp);font-size:10px;font-weight:700;padding:3px 8px;border-radius:10px">⭐ 전략순환</div></div></div>
+        <div class="pdf-sec-t">채점 결과</div>
+        <div class="pdf-sc-row"><span class="pdf-sc-lbl">버크만 흥미</span><div class="pdf-sc-tr"><div class="pdf-sc-fl" id="pd-b1" style="background:#4f8ef7;width:0%"></div></div><span class="pdf-sc-pts" id="pd-p1">—</span></div>
+        <div class="pdf-sc-row"><span class="pdf-sc-lbl">버크만 성향</span><div class="pdf-sc-tr"><div class="pdf-sc-fl" id="pd-b2" style="background:#06b6d4;width:0%"></div></div><span class="pdf-sc-pts" id="pd-p2">—</span></div>
+        <div class="pdf-sc-row"><span class="pdf-sc-lbl">직업적성 핵심</span><div class="pdf-sc-tr"><div class="pdf-sc-fl" id="pd-b3" style="background:#00c6a2;width:0%"></div></div><span class="pdf-sc-pts" id="pd-p3">—</span></div>
+        <div class="pdf-sc-row"><span class="pdf-sc-lbl">직업적성 참고</span><div class="pdf-sc-tr"><div class="pdf-sc-fl" id="pd-b4" style="background:#a3e635;width:0%"></div></div><span class="pdf-sc-pts" id="pd-p4">—</span></div>
+        <div class="pdf-total"><div><div style="font-size:12px;font-weight:700;color:#fff">총점</div><div style="font-size:10px;color:rgba(255,255,255,.5)">/100점</div></div><div style="display:flex;align-items:center;gap:14px"><div style="font-size:28px;font-weight:800;color:#fff" id="pd-total">—</div><div class="verdict" id="pd-verdict" style="font-size:11px">—</div></div></div>
+        <div class="pdf-sec-t">검토 의견</div>
+        <div style="font-size:9px;font-weight:700;color:var(--sub);margin-bottom:3px">HR 담당자</div>
+        <div style="border:1px solid var(--border);border-radius:6px;padding:8px 10px;min-height:36px;font-size:10px;color:var(--sub)" id="pd-hr">—</div>
+        <div style="font-size:9px;font-weight:700;color:var(--sub);margin:8px 0 3px">심의위원회</div>
+        <div style="border:1px solid var(--border);border-radius:6px;padding:8px 10px;min-height:36px;font-size:10px;color:var(--sub)" id="pd-committee">—</div>
+        <div class="pdf-sec-t">심의 결과</div>
+        <div class="pdf-result-opts" id="pd-result-opts"><div class="pdf-opt" id="pr-approve">✅ 승인</div><div class="pdf-opt" id="pr-cond">🔵 조건부</div><div class="pdf-opt" id="pr-hold">🟡 보류</div><div class="pdf-opt" id="pr-reject">❌ 반려</div></div>
+        <div class="pdf-sec-t">서명</div>
+        <div class="pdf-sign"><div class="pdf-sign-box"><div class="pdf-sign-role">HR 담당자</div><div class="pdf-sign-line"></div><div style="font-size:9px;color:var(--sub)">서명</div></div><div class="pdf-sign-box"><div class="pdf-sign-role">팀장/부서장</div><div class="pdf-sign-line"></div><div style="font-size:9px;color:var(--sub)">서명</div></div><div class="pdf-sign-box"><div class="pdf-sign-role">심의위원장</div><div class="pdf-sign-line"></div><div style="font-size:9px;color:var(--sub)">서명</div></div></div>
+      </div></div>
+    </div>
+    <div class="modal-footer">
+      <button class="cancel-btn" onclick="closeModal('pdfModal')">취소</button>
+      <button class="ok-btn" onclick="updatePdfPreview()">🔄 갱신</button>
+      <button class="ok-btn blue" onclick="printPdf()">📄 PDF 출력</button>
+    </div>
+  </div>
+</div>
+
+<!-- 대상자 추가 모달 -->
+<div class="modal-overlay" id="addModal">
+  <div class="add-modal">
+    <div class="modal-hdr"><h3>👤 대상자 추가</h3><button class="modal-close" onclick="closeModal('addModal')">✕</button></div>
+    <div class="modal-body">
+      <div class="fg-2col">
+        <div class="fg"><div class="fg-lbl">성명 *</div><input class="fg-in" id="am-name" placeholder="홍길동"></div>
+        <div class="fg"><div class="fg-lbl">소속 부서 *</div><input class="fg-in" id="am-dept" placeholder="생산팀"></div>
+        <div class="fg"><div class="fg-lbl">FROM 직무 *</div><select class="fg-in" id="am-from" onchange="amCalc()" style="appearance:none"></select></div>
+        <div class="fg"><div class="fg-lbl">TO 직무 *</div><select class="fg-in" id="am-to" onchange="amCalc()" style="appearance:none"></select></div>
+        <div class="fg"><div class="fg-lbl">총점 (자동)</div><input class="fg-in" id="am-score" readonly style="background:var(--bg)"></div>
+        <div class="fg"><div class="fg-lbl">판정 (자동)</div><input class="fg-in" id="am-verdict" readonly style="background:var(--bg)"></div>
+      </div>
+      <div class="fg"><div class="fg-lbl">비고</div><input class="fg-in" id="am-note" placeholder="특이사항"></div>
+      <div style="background:var(--bg);border-radius:8px;padding:10px 12px;font-size:11px;color:var(--sub);margin-top:8px">💡 점수는 직무 기준 예상값이에요. 정확한 채점은 대상자 채점 탭을 이용하세요.</div>
+    </div>
+    <div class="modal-footer">
+      <button class="cancel-btn" onclick="closeModal('addModal')">취소</button>
+      <button class="ok-btn" onclick="addToPool()">추가</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════
+// 데이터
+// ═══════════════════════════════════════════
+const JD = {
+  "구매파트":{g:"구매/자재",i:["관리","숫자"],w:"관리/회계",r:"Details",a:["수리력","사물지각력","집중력"]},
+  "물류파트":{g:"물류/납기",i:["관리","설득"],w:"운영/기술",r:"Details",a:["사물지각력","상황판단력","집중력"]},
+  "자재파트":{g:"구매/자재",i:["관리","숫자"],w:"관리/회계",r:"Details",a:["사물지각력","집중력","수리력"]},
+  "실린더파트(조립)":{g:"현장생산",i:["기술","관리"],w:"운영/기술",r:"Details",a:["기계능력","사물지각력","집중력"]},
+  "실린더파트(가공)":{g:"현장생산",i:["기술","관리"],w:"운영/기술",r:"Details",a:["기계능력","공간지각력","집중력"]},
+  "밸브파트":{g:"현장생산",i:["기술","관리"],w:"운영/기술",r:"Details",a:["기계능력","사물지각력","집중력"]},
+  "생산관리파트":{g:"생산기획",i:["숫자","관리"],w:"관리/회계",r:"Strategy",a:["수리력","추리력","상황판단력"]},
+  "고객만족파트":{g:"물류/납기",i:["설득","사회복지"],w:"영업/마케팅",r:"Inspire",a:["언어력","상황판단력","집중력"]},
+  "공압품질경영팀":{g:"품질",i:["관리","과학"],w:"관리/회계",r:"Details",a:["사물지각력","집중력","기계능력"]},
+  "밸브실린더기술파트":{g:"기술지원",i:["기술","과학"],w:"운영/기술",r:"Strategy",a:["기계능력","공간지각력","추리력"]},
+  "특주개발기술파트":{g:"기술지원",i:["기술","과학"],w:"기획/전략",r:"Strategy",a:["추리력","기계능력","문제해결능력"]},
+  "생산기술파트":{g:"기술지원",i:["기술","과학"],w:"운영/기술",r:"Details",a:["기계능력","공간지각력","추리력"]},
+  "필드영업팀":{g:"영업",i:["설득","문학"],w:"영업/마케팅",r:"Results",a:["언어력","상황판단력","사고유창력"]},
+  "프로젝트영업팀":{g:"영업",i:["설득","과학"],w:"영업/마케팅",r:"Results",a:["언어력","추리력","상황판단력"]},
+  "영업기획파트":{g:"영업기획",i:["숫자","관리"],w:"기획/전략",r:"Strategy",a:["수리력","추리력","문제해결능력"]},
+  "마케팅파트":{g:"마케팅",i:["설득","예술"],w:"영업/마케팅",r:"Inspire",a:["언어력","사고유창력","상황판단력"]},
+  "바이오3D":{g:"영업",i:["설득","기술"],w:"영업/마케팅",r:"Results",a:["언어력","기계능력","상황판단력"]},
+  "해외영업팀":{g:"영업",i:["설득","문학"],w:"영업/마케팅",r:"Results",a:["언어력","상황판단력","사고유창력"]},
+  "디지털전략팀":{g:"IT",i:["기술","관리"],w:"기획/전략",r:"Strategy",a:["추리력","수리력","집중력"]},
+  "내부회계파트":{g:"회계/재무",i:["숫자","관리"],w:"관리/회계",r:"Details",a:["수리력","집중력","추리력"]},
+  "회계파트":{g:"회계/재무",i:["숫자","관리"],w:"관리/회계",r:"Details",a:["수리력","집중력","추리력"]},
+  "자금파트":{g:"회계/재무",i:["숫자","관리"],w:"관리/회계",r:"Details",a:["수리력","집중력","상황판단력"]},
+  "인사총무파트":{g:"HR/총무",i:["사회복지","관리"],w:"관리/회계",r:"Inspire",a:["언어력","상황판단력","문제해결능력"]},
+  "구동기기개발팀":{g:"R&D",i:["과학","기술"],w:"기획/전략",r:"Strategy",a:["추리력","수리력","문제해결능력"]},
+  "융합연구팀":{g:"R&D",i:["과학","기술"],w:"기획/전략",r:"Strategy",a:["추리력","수리력","기계능력"]},
+  "제어기기개발팀":{g:"R&D",i:["과학","기술"],w:"기획/전략",r:"Strategy",a:["추리력","수리력","문제해결능력"]},
+  "생산기획(로봇)":{g:"생산기획",i:["숫자","관리"],w:"관리/회계",r:"Strategy",a:["수리력","추리력","상황판단력"]},
+  "조립라인(로봇)":{g:"현장생산",i:["기술","관리"],w:"운영/기술",r:"Details",a:["기계능력","사물지각력","집중력"]},
+  "가공라인(로봇)":{g:"현장생산",i:["기술","관리"],w:"운영/기술",r:"Details",a:["기계능력","공간지각력","집중력"]},
+  "구매파트(로봇)":{g:"구매/자재",i:["관리","숫자"],w:"관리/회계",r:"Details",a:["수리력","사물지각력","집중력"]},
+  "제품설계팀(로봇)":{g:"기술지원",i:["기술","과학"],w:"기획/전략",r:"Strategy",a:["기계능력","공간지각력","추리력"]},
+  "품질기술파트(로봇)":{g:"품질",i:["관리","과학"],w:"관리/회계",r:"Details",a:["사물지각력","집중력","기계능력"]},
+};
+
+const SP_LIST = [
+  ["구매파트","구매파트(로봇)"],["생산관리파트","생산기획(로봇)"],
+  ["실린더파트(조립)","조립라인(로봇)"],["실린더파트(가공)","가공라인(로봇)"],
+  ["밸브파트","조립라인(로봇)"],["공압품질경영팀","품질기술파트(로봇)"],
+  ["밸브실린더기술파트","제품설계팀(로봇)"],["특주개발기술파트","제품설계팀(로봇)"],
+  ["구매파트","자재파트"],["회계파트","자금파트"],
+  ["실린더파트(조립)","실린더파트(가공)"],["구동기기개발팀","프로젝트영업팀"],
+];
+
+const NCS_DATA = {
+  "구매파트|구매파트(로봇)":{lv:"소분류 동일",c:"#dcfce7",fc:"#16a34a",cl:"NCS 생산관리 > 구매조달",s:["발주관리","단가협상","협력사관리","원가절감","BOM관리"],f:[],t:[]},
+  "구매파트|자재파트":{lv:"소분류 동일",c:"#dcfce7",fc:"#16a34a",cl:"NCS 생산관리 > 구매조달·자재관리",s:["BOM관리","입고처리","ERP처리","납기관리"],f:["단가협상","협력사관리"],t:["재고실사","불출관리"]},
+  "생산관리파트|생산기획(로봇)":{lv:"소분류 동일",c:"#dcfce7",fc:"#16a34a",cl:"NCS 생산관리 > 공정관리",s:["생산계획수립","납기관리","KPI관리","원가관리","ERP활용"],f:[],t:[]},
+  "실린더파트(조립)|조립라인(로봇)":{lv:"중분류 동일",c:"#fef9c3",fc:"#ca8a04",cl:"NCS 기계 > 기계조립",s:["기계조립","자주검사","설비유지보전","안전관리","소모품관리"],f:[],t:[]},
+  "실린더파트(가공)|가공라인(로봇)":{lv:"중분류 동일",c:"#fef9c3",fc:"#ca8a04",cl:"NCS 기계 > 절삭가공",s:["절삭가공","설비조작","치공구관리","자주검사","가공도면해독"],f:[],t:[]},
+  "밸브파트|조립라인(로봇)":{lv:"중분류 동일",c:"#fef9c3",fc:"#ca8a04",cl:"NCS 기계 > 기계조립",s:["기계조립","자주검사","설비유지보전","안전관리"],f:["밸브조립"],t:["로봇부품조립"]},
+  "공압품질경영팀|품질기술파트(로봇)":{lv:"소분류 동일",c:"#dcfce7",fc:"#16a34a",cl:"NCS 기계품질관리",s:["수입검사","공정검사","출하검사","부적합관리","ISO인증관리","계측기관리"],f:[],t:[]},
+  "밸브실린더기술파트|제품설계팀(로봇)":{lv:"소분류 동일",c:"#dcfce7",fc:"#16a34a",cl:"NCS 기계 > 기계설계",s:["기계설계","도면작성","BOM관리","CAD활용","설계변경관리"],f:["공압설계"],t:["로봇설계"]},
+  "특주개발기술파트|제품설계팀(로봇)":{lv:"소분류 동일",c:"#dcfce7",fc:"#16a34a",cl:"NCS 기계 > 기계설계",s:["기계설계","도면작성","BOM관리","CAD활용"],f:["특수사양설계"],t:["로봇구조설계"]},
+  "회계파트|자금파트":{lv:"소분류 동일",c:"#dcfce7",fc:"#16a34a",cl:"NCS 경영·사무 > 재무·회계",s:["재무제표작성","ERP회계처리","결산관리"],f:["회계감사"],t:["자금계획","여신관리"]},
+  "실린더파트(조립)|실린더파트(가공)":{lv:"중분류 동일",c:"#fef9c3",fc:"#ca8a04",cl:"NCS 기계 > 기계조립·절삭가공",s:["자주검사","설비유지보전","안전관리","소모품관리"],f:["기계조립"],t:["절삭가공","치공구관리"]},
+  "구동기기개발팀|프로젝트영업팀":{lv:"기능 연계",c:"#dbeafe",fc:"#2563eb",cl:"NCS 기계설계 → 영업판매(기술영업)",s:["기술문서작성","제품사양이해","고객기술지원"],f:["연구개발","시험평가"],t:["영업기획","수주관리"]},
+};
+
+const DEPTS = {
+  "통합구매물류팀":["구매파트","물류파트","자재파트"],
+  "생산팀":["실린더파트(조립)","실린더파트(가공)","밸브파트","생산관리파트","고객만족파트"],
+  "공압품질경영팀":["공압품질경영팀"],
+  "제품기술팀":["밸브실린더기술파트","특주개발기술파트","생산기술파트"],
+  "영업본부":["필드영업팀","프로젝트영업팀","영업기획파트","마케팅파트","바이오3D","해외영업팀"],
+  "경영기획본부":["디지털전략팀","내부회계파트","회계파트","자금파트","인사총무파트"],
+  "연구소":["구동기기개발팀","융합연구팀","제어기기개발팀"],
+  "로봇사업본부":["생산기획(로봇)","조립라인(로봇)","가공라인(로봇)","구매파트(로봇)","제품설계팀(로봇)","품질기술파트(로봇)"],
+};
+
+const DN = {"바이오3D":"바이오·3D프린팅사업팀","밸브실린더기술파트":"밸브·실린더기술파트","영업기획파트":"영업기획팀(기획파트)","마케팅파트":"영업기획팀(마케팅파트)","실린더파트(조립)":"실린더파트(조립라인)","실린더파트(가공)":"실린더파트(가공라인)","생산기획(로봇)":"생산기획파트(로봇)","조립라인(로봇)":"조립라인(로봇)","가공라인(로봇)":"가공라인(로봇)","구매파트(로봇)":"구매파트(로봇)","제품설계팀(로봇)":"제품설계팀(로봇)","품질기술파트(로봇)":"품질기술파트(로봇)"};
+const SN = {"구매파트":"구매","구매파트(로봇)":"구매(로봇)","생산관리파트":"생산관리","생산기획(로봇)":"생산기획R","실린더파트(조립)":"실린더조립","조립라인(로봇)":"조립R","실린더파트(가공)":"실린더가공","가공라인(로봇)":"가공R","밸브파트":"밸브","공압품질경영팀":"공압품질","품질기술파트(로봇)":"품질R","밸브실린더기술파트":"밸브기술","특주개발기술파트":"특주개발","제품설계팀(로봇)":"설계R","자재파트":"자재","회계파트":"회계","자금파트":"자금","구동기기개발팀":"구동기기","프로젝트영업팀":"PJT영업"};
+const GC = {"구매/자재":"#dbeafe","현장생산":"#dcfce7","품질":"#fef9c3","생산기획":"#d1fae5","기술지원":"#fed7aa","영업":"#f3e8ff","영업기획":"#ede9fe","마케팅":"#fce7f3","R&D":"#e0e7ff","IT":"#ccfbf1","회계/재무":"#cffafe","HR/총무":"#fef3c7","물류/납기":"#e0f2fe"};
+const GTC = {"구매/자재":"#1d4ed8","현장생산":"#16a34a","품질":"#ca8a04","생산기획":"#059669","기술지원":"#c2410c","영업":"#7c3aed","영업기획":"#6d28d9","마케팅":"#be185d","R&D":"#3730a3","IT":"#0f766e","회계/재무":"#0e7490","HR/총무":"#b45309","물류/납기":"#0369a1"};
+const APTS = ["언어력","수리력","추리력","공간지각력","사물지각력","상황판단력","기계능력","집중력","색채지각력","문제해결능력","사고유창력"];
+const CCOLORS = ['#4f8ef7','#00c6a2','#f59e0b'];
+const STORAGE_KEY = 'tpc_dash_v2';
+
+// ═══════════════════════════════════════════
+// 상태 변수
+// ═══════════════════════════════════════════
+let poolData = [];
+let curScores = null;
+let curFrom = '', curTo = '';
+let pdfResult = '';
+let netCanvas, netCtx, netNodes = {}, netEdges = [];
+let netFilter = 'all', netDrag = null, netDragOff = {x:0,y:0};
+let netScale = 1, netPan = {x:0,y:0}, netPanStart = null;
+let netSelected = null, netAnimId = null;
+
+// ═══════════════════════════════════════════
+// 유틸
+// ═══════════════════════════════════════════
+function isSP(f,t){ return SP_LIST.some(([a,b])=>(a===f&&b===t)||(b===f&&a===t)); }
+function getNCS(f,t){ return NCS_DATA[f+'|'+t]||NCS_DATA[t+'|'+f]||null; }
+function ncsLv(f,t){
+  const ncsGrp={"구매파트":"생산관리(구매조달)","자재파트":"생산관리(자재관리)","구매파트(로봇)":"생산관리(구매조달)","생산관리파트":"생산관리(공정관리)","생산기획(로봇)":"생산관리(공정관리)","물류파트":"물류관리","고객만족파트":"영업판매(고객관리)","실린더파트(조립)":"기계조립","밸브파트":"기계조립","조립라인(로봇)":"기계조립","실린더파트(가공)":"절삭가공","가공라인(로봇)":"절삭가공","공압품질경영팀":"기계품질관리","품질기술파트(로봇)":"기계품질관리","밸브실린더기술파트":"기계설계","특주개발기술파트":"기계설계","생산기술파트":"기계설계","제품설계팀(로봇)":"기계설계","구동기기개발팀":"기계공학설계","융합연구팀":"기계공학설계","제어기기개발팀":"기계공학설계","필드영업팀":"영업판매(영업)","프로젝트영업팀":"영업판매(영업)","바이오3D":"영업판매(영업)","해외영업팀":"영업판매(영업)","영업기획파트":"영업판매(판매)","마케팅파트":"영업판매(판매)","디지털전략팀":"정보기술","내부회계파트":"재무·회계","회계파트":"재무·회계","자금파트":"재무·회계","인사총무파트":"인사·조직"};
+  const nf=ncsGrp[f]||'',nt=ncsGrp[t]||'';
+  if(nf===nt&&nf) return '소분류 동일 ✅';
+  if(nf.split('(')[0]===nt.split('(')[0]&&nf) return '중분류 동일';
+  return '기능 연계';
+}
+function verdict(s){
+  if(s>=80) return{t:'✅ 전환 추천',bg:'#dcfce7',c:'#16a34a'};
+  if(s>=60) return{t:'🔵 전환 가능',bg:'#dbeafe',c:'#2563eb'};
+  if(s>=50) return{t:'🟡 조건부 검토',bg:'#fef9c3',c:'#ca8a04'};
+  return{t:'❌ 전환 보류',bg:'#fee2e2',c:'#dc2626'};
+}
+function animN(el,tgt){
+  const s=parseInt(el.textContent)||0,st=performance.now();
+  const up=t=>{const p=Math.min((t-st)/800,1),e=1-Math.pow(1-p,3);el.textContent=Math.round(s+(tgt-s)*e);if(p<1)requestAnimationFrame(up);};
+  requestAnimationFrame(up);
+}
+function setBars(prefix,sc){
+  setTimeout(()=>{
+    document.getElementById(prefix+'b1').style.width=(sc.interest/20*100)+'%';
+    document.getElementById(prefix+'b2').style.width=(sc.style/15*100)+'%';
+    document.getElementById(prefix+'b3').style.width=(sc.apt/55*100)+'%';
+    document.getElementById(prefix+'b4').style.width=(sc.ref/10*100)+'%';
+  },200);
+}
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('on');
+  setTimeout(()=>t.classList.remove('on'),2500);
+}
+function openModal(id){ document.getElementById(id).classList.add('on'); }
+function closeModal(id){ document.getElementById(id).classList.remove('on'); }
+
+// ═══════════════════════════════════════════
+// 드롭다운 생성
+// ═══════════════════════════════════════════
+function buildSel(el, inclEmpty=true){
+  el.innerHTML = inclEmpty ? '<option value="">직무 선택 ▾</option>' : '';
+  Object.entries(DEPTS).forEach(([dept,jobs])=>{
+    const og=document.createElement('optgroup');og.label=dept;
+    jobs.forEach(j=>{const o=document.createElement('option');o.value=j;o.textContent=DN[j]||j;og.appendChild(o);});
+    el.appendChild(og);
+  });
+}
+['s-from','s-to','s-from2','s-to2'].forEach(id=>buildSel(document.getElementById(id)));
+
+// 적성 그리드
+const ag = document.getElementById('aptGrid');
+APTS.forEach(a=>{
+  const d=document.createElement('div');d.className='apt-item';
+  d.innerHTML=`<div class="apt-nm">${a}</div><input type="number" class="apt-in" id="ai-${a}" min="40" max="160" placeholder="점수" oninput="updLv('${a}')"><div class="apt-lv" id="lv-${a}"></div>`;
+  ag.appendChild(d);
+});
+
+function updLv(a){
+  const v=parseInt(document.getElementById('ai-'+a).value)||0;
+  const el=document.getElementById('lv-'+a);
+  if(!v){el.textContent='';el.style.background='';return;}
+  let tx,bg,fc;
+  if(v>=120){tx='최상';bg='#dcfce7';fc='#16a34a';}
+  else if(v>=112){tx='상';bg='#e0f2fe';fc='#0369a1';}
+  else if(v>=100){tx='중상✅';bg='#eff6ff';fc='#2563eb';}
+  else if(v>=88){tx='중하';bg='#fef9c3';fc='#ca8a04';}
+  else if(v>=81){tx='하';bg='#fee2e2';fc='#dc2626';}
+  else{tx='최하';bg='#fee2e2';fc='#dc2626';}
+  el.textContent=tx;el.style.background=bg;el.style.color=fc;
+}
+function aptPts(v){if(!v||v<81)return 0;if(v>=120)return 18;if(v>=112)return 15;if(v>=100)return 11;if(v>=88)return 6;return 3;}
+
+function scoreFromJobs(f,t){
+  const jf=JD[f],jt=JD[t]; if(!jf||!jt) return null;
+  const mc=Math.min(2,jf.i.filter(x=>jt.i.includes(x)).length);
+  const interest=mc>=2?20:mc===1?14:8;
+  const wm=jf.w===jt.w,rm=jf.r===jt.r;
+  const style=(wm&&rm)?15:(wm||rm)?9:5;
+  const apt=Math.min(55,jt.a.length*11);
+  return{interest,style,apt,ref:8,total:interest+style+apt+8};
+}
+
+// ═══════════════════════════════════════════
+// 탭 전환
+// ═══════════════════════════════════════════
+function sw(name){
+  const NAMES=['explore','score','pool','compare','network'];
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('on',NAMES[i]===name));
+  document.querySelectorAll('.tp').forEach((p,i)=>p.classList.toggle('on',NAMES[i]===name));
+  if(name==='pool'){renderPool();updateStats();}
+  if(name==='compare'){buildCmpCards();}
+  if(name==='network'){setTimeout(initNet,80);}
+}
+
+// ═══════════════════════════════════════════
+// 탭1: 직무 탐색
+// ═══════════════════════════════════════════
+function calc(){
+  const f=document.getElementById('s-from').value, t=document.getElementById('s-to').value;
+  const rw=document.getElementById('rw-explore'), ph=document.getElementById('ph-explore');
+  const arr=document.getElementById('arrowIc');
+  if(!f||!t||f===t){rw.classList.remove('on');ph.style.display='flex';arr.classList.remove('on');document.getElementById('ncs-panel').style.display='none';return;}
+  arr.classList.add('on');ph.style.display='none';rw.classList.add('on');
+  const sc=scoreFromJobs(f,t); if(!sc) return;
+  document.getElementById('e-p1').textContent=`${sc.interest}/20`;
+  document.getElementById('e-p2').textContent=`${sc.style}/15`;
+  document.getElementById('e-p3').textContent=`${sc.apt}/55`;
+  document.getElementById('e-p4').textContent=`${sc.ref}/10`;
+  setBars('e-',sc);
+  const v=verdict(sc.total);
+  animN(document.getElementById('num1'),sc.total);
+  const arc=document.getElementById('arc1');arc.style.stroke=v.c;
+  setTimeout(()=>{arc.style.strokeDashoffset=383-(sc.total/100)*383;},100);
+  const vb=document.getElementById('vd1');vb.textContent=v.t;vb.style.background=v.bg;vb.style.color=v.c;
+  document.getElementById('ic-dir').textContent=isSP(f,t)?'양방향 ↔':'단방향 →';
+  document.getElementById('ic-ncs').textContent=ncsLv(f,t);
+  document.getElementById('ic-apt').textContent=JD[t].a.join(' · ');
+  document.getElementById('ic-brk').textContent=JD[t].i.join(' · ');
+  document.getElementById('sp-banner1').style.display=isSP(f,t)?'flex':'none';
+  // NCS
+  const nd=getNCS(f,t);
+  const np=document.getElementById('ncs-panel');
+  if(nd){
+    np.style.display='block';
+    const lb=document.getElementById('ncs-lv');lb.textContent=nd.lv;lb.style.background=nd.c;lb.style.color=nd.fc;
+    document.getElementById('ncs-cl').textContent=nd.cl;
+    document.getElementById('ncs-shared').innerHTML=nd.s.map(u=>`<span class="ncs-tag sh">${u}</span>`).join('');
+    const ow=document.getElementById('ncs-only-wrap');
+    if((nd.f&&nd.f.length)||(nd.t&&nd.t.length)){
+      ow.style.display='block';
+      document.getElementById('ncs-onlyF').innerHTML=(nd.f||[]).map(u=>`<span class="ncs-tag of">${u}</span>`).join('');
+      document.getElementById('ncs-onlyT').innerHTML=(nd.t||[]).map(u=>`<span class="ncs-tag ot">${u}</span>`).join('');
+    }else{ow.style.display='none';}
+  }else{np.style.display='none';}
+}
+
+// ═══════════════════════════════════════════
+// 탭2: 대상자 채점
+// ═══════════════════════════════════════════
+function syncAndHL(){
+  const t=document.getElementById('s-to2').value;
+  document.getElementById('s-from').value=document.getElementById('s-from2').value;
+  document.getElementById('s-to').value=t;
+  APTS.forEach(a=>{
+    const el=document.getElementById('ai-'+a); if(!el) return;
+    const jt=JD[t];
+    el.classList.toggle('key',!!(jt&&jt.a.includes(a)));
+  });
+  document.getElementById('keyHint').textContent=JD[t]?`(핵심: ${JD[t].a.join('·')})`: '';
+}
+
+function calcReal(){
+  const f=document.getElementById('s-from2').value, t=document.getElementById('s-to2').value;
+  if(!f||!t||f===t){alert('FROM과 TO 직무를 선택해주세요.');return;}
+  const jt=JD[t];
+  const ui=[document.getElementById('bi1').value,document.getElementById('bi2').value,document.getElementById('bi3').value].filter(Boolean);
+  const bw=document.getElementById('bw').value, br=document.getElementById('br').value;
+  const mc=Math.min(2,ui.filter(x=>jt.i.includes(x)).length);
+  const interest=mc>=2?20:mc===1?14:8;
+  const wm=bw&&bw===jt.w, rm=br&&br===jt.r;
+  const style=(!bw&&!br)?5:(wm&&rm)?15:(wm||rm)?9:5;
+  const aptS=jt.a.map(a=>aptPts(parseInt(document.getElementById('ai-'+a)?.value)||0));
+  const apt=Math.min(55,aptS.reduce((a,b)=>a+b,0));
+  const others=APTS.filter(a=>!jt.a.includes(a)&&a!=='색채지각력');
+  const os=others.map(a=>parseInt(document.getElementById('ai-'+a)?.value)||0).filter(v=>v>0);
+  const avg=os.length?os.reduce((a,b)=>a+b,0)/os.length:0;
+  const ref=avg>=112?10:avg>=100?8:avg>=88?5:avg>0?3:5;
+  const total=interest+style+apt+ref;
+  curFrom=f;curTo=t;curScores={interest,style,apt,ref,total};
+  document.getElementById('rw-score').classList.add('on');
+  document.getElementById('scoreActionBtns').style.display='block';
+  const v=verdict(total);
+  animN(document.getElementById('num2'),total);
+  const arc=document.getElementById('arc2');arc.style.stroke=v.c;
+  setTimeout(()=>{arc.style.strokeDashoffset=383-(total/100)*383;},100);
+  const vb=document.getElementById('vd2');vb.textContent=v.t;vb.style.background=v.bg;vb.style.color=v.c;
+  document.getElementById('r-p1').textContent=`${interest}/20`;
+  document.getElementById('r-p2').textContent=`${style}/15`;
+  document.getElementById('r-p3').textContent=`${apt}/55`;
+  document.getElementById('r-p4').textContent=`${ref}/10`;
+  setBars('r-',{interest,style,apt,ref});
+  document.getElementById('r-int').textContent=`${mc}개 (${ui.join('·')||'미입력'})`;
+  document.getElementById('r-sty').textContent=`일하는방식 ${wm?'✅':'❌'} / 대인관계 ${rm?'✅':'❌'}`;
+  document.getElementById('r-apt').textContent=jt.a.map((a,i)=>`${a}:${aptS[i]}점`).join(' / ');
+  document.getElementById('r-ncs').textContent=ncsLv(f,t);
+  document.getElementById('sp-banner2').style.display=isSP(f,t)?'flex':'none';
+  document.getElementById('scoreActionBtns').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+// ═══════════════════════════════════════════
+// PDF
+// ═══════════════════════════════════════════
+
+function setPdfResult(r){
+  pdfResult=r;
+  ['approve','cond','hold','reject'].forEach(k=>{
+    document.getElementById('ro-'+k)?.classList.toggle('on',k===r);
+    document.getElementById('pr-'+k)?.classList.toggle('on',k===r);
+  });
+}
+function openPdfModal(){
+  if(!curScores){alert('먼저 채점하기를 실행하세요.');return;}
+  document.getElementById('pf-job').value=DN[curFrom]||curFrom;
+  updatePdfPreview();
+  openModal('pdfModal');
+}
+function updatePdfPreview(){
+  const now=new Date();
+  document.getElementById('pd-date').textContent=`작성일: ${now.getFullYear()}.${now.getMonth()+1}.${now.getDate()}`;
+  document.getElementById('pd-name').textContent=document.getElementById('pf-name').value||'—';
+  document.getElementById('pd-id').textContent=document.getElementById('pf-id').value||'—';
+  document.getElementById('pd-dept').textContent=document.getElementById('pf-dept').value||'—';
+  document.getElementById('pd-job').textContent=document.getElementById('pf-job').value||'—';
+  document.getElementById('pd-from').textContent=DN[curFrom]||curFrom||'—';
+  document.getElementById('pd-to').textContent=DN[curTo]||curTo||'—';
+  document.getElementById('pd-sp').style.display=isSP(curFrom,curTo)?'block':'none';
+  if(curScores){
+    const s=curScores;
+    document.getElementById('pd-p1').textContent=`${s.interest}/20`;
+    document.getElementById('pd-p2').textContent=`${s.style}/15`;
+    document.getElementById('pd-p3').textContent=`${s.apt}/55`;
+    document.getElementById('pd-p4').textContent=`${s.ref}/10`;
+    document.getElementById('pd-total').textContent=s.total;
+    setTimeout(()=>{
+      document.getElementById('pd-b1').style.width=(s.interest/20*100)+'%';
+      document.getElementById('pd-b2').style.width=(s.style/15*100)+'%';
+      document.getElementById('pd-b3').style.width=(s.apt/55*100)+'%';
+      document.getElementById('pd-b4').style.width=(s.ref/10*100)+'%';
+    },100);
+    const v=verdict(s.total);
+    const vb=document.getElementById('pd-verdict');vb.textContent=v.t;vb.style.background=v.bg;vb.style.color=v.c;
+  }
+  document.getElementById('pd-hr').textContent=document.getElementById('pf-hr').value||'(미입력)';
+  document.getElementById('pd-committee').textContent=document.getElementById('pf-committee').value||'(심의 당일 기재)';
+}
+function printPdf(){
+  updatePdfPreview();
+  const doc=document.getElementById('pdfDoc');
+  const w=window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>직무전환 결과서</title><style>*{margin:0;padding:0;box-sizing:border-box;}body{font-family:'Malgun Gothic',sans-serif;font-size:11px;color:#1a202c;padding:20px;}@media print{body{padding:0;}}@page{margin:12mm;size:A4;}</style></head><body>`);
+  w.document.write(doc.outerHTML);
+  w.document.write(`</body></html>`);
+  w.document.close();setTimeout(()=>w.print(),400);
+}
+
+// ═══════════════════════════════════════════
+// 탭3: 후보군 관리
+// ═══════════════════════════════════════════
+function openAddModal(){
+  buildSel(document.getElementById('am-from'));
+  buildSel(document.getElementById('am-to'));
+  if(curFrom) document.getElementById('am-from').value=curFrom;
+  if(curTo) document.getElementById('am-to').value=curTo;
+  amCalc();
+  openModal('addModal');
+}
+function addFromScore(){
+  if(!curScores){alert('먼저 채점하기를 실행하세요.');return;}
+  openAddModal();
+}
+function amCalc(){
+  const f=document.getElementById('am-from').value, t=document.getElementById('am-to').value;
+  if(!f||!t||f===t){document.getElementById('am-score').value='';document.getElementById('am-verdict').value='';return;}
+  const sc=scoreFromJobs(f,t);
+  if(!sc) return;
+  document.getElementById('am-score').value=sc.total;
+  document.getElementById('am-verdict').value=verdict(sc.total).t;
+}
+function addToPool(){
+  const name=document.getElementById('am-name').value.trim();
+  const dept=document.getElementById('am-dept').value.trim();
+  const f=document.getElementById('am-from').value;
+  const t=document.getElementById('am-to').value;
+  if(!name||!dept||!f||!t){alert('성명·소속·FROM·TO는 필수입니다.');return;}
+  const sc=parseInt(document.getElementById('am-score').value)||0;
+  poolData.push({id:Date.now(),name,dept,from:f,to:t,score:sc,verdict:verdict(sc).t,sp:isSP(f,t),ncs:ncsLv(f,t),note:document.getElementById('am-note').value});
+  closeModal('addModal');
+  ['am-name','am-dept','am-note'].forEach(id=>document.getElementById(id).value='');
+  save();renderPool();updateStats();sw('pool');
+  toast(`👥 ${name} 추가 완료!`);
+}
+function deleteFromPool(id){
+  if(!confirm('삭제할까요?')) return;
+  poolData=poolData.filter(d=>d.id!==id);
+  save();renderPool();updateStats();
+}
+function renderPool(){
+  const q=(document.getElementById('poolSearch').value||'').toLowerCase();
+  const fv=document.getElementById('poolFilter').value;
+  const spv=document.getElementById('poolSpFilter').value;
+  const data=poolData.filter(d=>{
+    const m=!q||(d.name+d.dept+(DN[d.from]||d.from)+(DN[d.to]||d.to)).toLowerCase().includes(q);
+    return m&&(!fv||d.verdict===fv)&&(!spv||d.sp);
+  });
+  const tb=document.getElementById('poolTbody');
+  const em=document.getElementById('poolEmpty');
+  if(!data.length){tb.innerHTML='';em.style.display='block';return;}
+  em.style.display='none';
+  const VC={'✅ 전환 추천':{bg:'#dcfce7',c:'#16a34a'},'🔵 전환 가능':{bg:'#dbeafe',c:'#2563eb'},'🟡 조건부 검토':{bg:'#fef9c3',c:'#ca8a04'},'❌ 전환 보류':{bg:'#fee2e2',c:'#dc2626'}};
+  tb.innerHTML=data.map((d,i)=>{
+    const vc=VC[d.verdict]||{bg:'#f1f5f9',c:'#64748b'};
+    return `<tr><td style="color:var(--sub);font-weight:600">${i+1}</td><td style="font-weight:700;color:var(--navy)">${d.name}</td><td>${d.dept}</td><td style="color:var(--accent);font-weight:600">${DN[d.from]||d.from}</td><td style="color:var(--accent2);font-weight:600">${DN[d.to]||d.to}</td><td style="font-weight:800;color:var(--navy)">${d.score}<span style="font-size:9px;color:var(--sub)">/100</span></td><td><span class="v-badge" style="background:${vc.bg};color:${vc.c}">${d.verdict}</span></td><td style="text-align:center">${d.sp?'⭐':'—'}</td><td style="font-size:10px;color:var(--sub)">${d.ncs}</td><td style="font-size:10px;color:var(--sub);max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.note||'—'}</td><td style="white-space:nowrap"><button class="act-btn" onclick="openPdfForPool(${d.id})" title="결과서">📄</button> <button class="act-btn del" onclick="deleteFromPool(${d.id})">✕</button></td></tr>`;
+  }).join('');
+}
+function updateStats(){
+  document.getElementById('ps-total').textContent=poolData.length;
+  document.getElementById('ps-rec').textContent=poolData.filter(d=>d.verdict==='✅ 전환 추천').length;
+  document.getElementById('ps-ok').textContent=poolData.filter(d=>d.verdict==='🔵 전환 가능').length;
+  document.getElementById('ps-cond').textContent=poolData.filter(d=>['🟡 조건부 검토','❌ 전환 보류'].includes(d.verdict)).length;
+}
+function openPdfForPool(id){
+  const d=poolData.find(x=>x.id===id); if(!d) return;
+  curFrom=d.from;curTo=d.to;
+  const sc=scoreFromJobs(d.from,d.to);
+  curScores=sc?{...sc,total:d.score}:{interest:0,style:0,apt:0,ref:0,total:d.score};
+  document.getElementById('pf-name').value=d.name;
+  document.getElementById('pf-dept').value=d.dept;
+  document.getElementById('pf-job').value=DN[d.from]||d.from;
+  openPdfModal();
+}
+
+// ═══════════════════════════════════════════
+// 탭4: 다중 비교
+// ═══════════════════════════════════════════
+function buildCmpCards(){
+  const wrap=document.getElementById('cmpCards'); if(!wrap) return;
+  wrap.innerHTML=[0,1,2].map(function(i){
+    return '<div class="cmp-card" id="cc'+i+'">'
+      +'<div class="cmp-card-num" style="color:'+CCOLORS[i]+'">● 대상자 '+(i+1)+'</div>'
+      +'<div style="margin-bottom:6px"><div class="sel-lbl from" style="margin-bottom:4px">FROM</div>'
+      +'<select id="cf'+i+'" onchange="updCmpCard('+i+')" style="appearance:none;border:1.5px solid #e2e8f0;border-radius:7px;padding:7px 10px;font-size:11px;font-family:inherit;background:#fff;width:100%;cursor:pointer;"></select></div>'
+      +'<div style="margin-bottom:6px"><div class="sel-lbl to" style="margin-bottom:4px">TO</div>'
+      +'<select id="ct'+i+'" onchange="updCmpCard('+i+')" style="appearance:none;border:1.5px solid #e2e8f0;border-radius:7px;padding:7px 10px;font-size:11px;font-family:inherit;background:#fff;width:100%;cursor:pointer;"></select></div>'
+      +'<input class="cmp-name" id="cn'+i+'" placeholder="이름 입력 (선택)">'
+      +'<div class="cmp-score-box" id="csb'+i+'" style="display:none">'
+      +'<div class="cmp-score-big" id="cscore'+i+'">—</div>'
+      +'<div style="font-size:10px;color:rgba(255,255,255,.5)">/100점</div>'
+      +'<div class="cmp-verdict-sm" id="cvd'+i+'">—</div>'
+      +'</div></div>';
+  }).join('');
+  [0,1,2].forEach(i=>{
+    buildSel(document.getElementById('cf'+i));
+    buildSel(document.getElementById('ct'+i));
+  });
+  // 후보군에서 자동 채우기
+  poolData.slice(0,3).forEach((d,i)=>{
+    document.getElementById('cf'+i).value=d.from;
+    document.getElementById('ct'+i).value=d.to;
+    document.getElementById('cn'+i).value=d.name;
+    updCmpCard(i);
+  });
+}
+function updCmpCard(i){
+  const f=document.getElementById('cf'+i).value, t=document.getElementById('ct'+i).value;
+  const box=document.getElementById('csb'+i), card=document.getElementById('cc'+i);
+  if(!f||!t||f===t){box.style.display='none';card.classList.remove('on');return;}
+  const sc=scoreFromJobs(f,t); if(!sc) return;
+  box.style.display='block';card.classList.add('on');
+  document.getElementById('cscore'+i).textContent=sc.total;
+  const v=verdict(sc.total);
+  const vd=document.getElementById('cvd'+i);vd.textContent=v.t;vd.style.background=v.bg;vd.style.color=v.c;
+}
+function runCompare(){
+  const entries=[];
+  for(let i=0;i<3;i++){
+    const f=document.getElementById('cf'+i).value, t=document.getElementById('ct'+i).value;
+    if(!f||!t||f===t) continue;
+    const name=document.getElementById('cn'+i).value||`대상자 ${i+1}`;
+    entries.push({i,f,t,name,sc:scoreFromJobs(f,t)||{interest:0,style:0,apt:0,ref:0,total:0},color:CCOLORS[i]});
+  }
+  if(entries.length<2){alert('최소 2명 입력해주세요.');return;}
+  const sorted=[...entries].sort((a,b)=>b.sc.total-a.sc.total);
+  document.getElementById('cmpResult').classList.add('on');
+  // 헤더
+  entries.forEach((e,i)=>{const th=document.getElementById('cth'+i);if(th)th.textContent=e.name;});
+  for(let i=entries.length;i<3;i++){const th=document.getElementById('cth'+i);if(th)th.textContent='—';}
+  // 순위 카드
+  const ranks=['🥇','🥈','🥉'];
+  document.getElementById('rankRow').innerHTML=sorted.map((e,r)=>{
+    const v=verdict(e.sc.total);
+    return `<div class="rank-card" style="border-color:${e.color}"><div style="font-size:24px;margin-bottom:4px">${ranks[r]}</div><div style="font-size:14px;font-weight:800;color:var(--navy)">${e.name}</div><div style="font-size:10px;color:var(--sub);margin:4px 0 8px">${DN[e.f]||e.f} → ${DN[e.t]||e.t}</div><div style="font-size:30px;font-weight:800;color:${e.color}">${e.sc.total}</div><div style="font-size:9px;color:var(--sub)">/100점</div><div style="margin-top:6px;padding:3px 8px;border-radius:20px;font-size:10px;font-weight:700;background:${v.bg};color:${v.c};display:inline-block">${v.t}</div>${isSP(e.f,e.t)?'<div style="margin-top:4px;font-size:10px;font-weight:700;color:var(--sp)">⭐ 전략순환</div>':''}</div>`;
+  }).join('');
+  // 비교 테이블
+  const rows=[{l:'버크만 흥미',m:20,k:'interest'},{l:'버크만 성향',m:15,k:'style'},{l:'직업적성 핵심',m:55,k:'apt'},{l:'직업적성 참고',m:10,k:'ref'},{l:'총점',m:100,k:'total'}];
+  const maxK={};rows.forEach(row=>{maxK[row.k]=Math.max(...entries.map(e=>e.sc[row.k]));});
+  document.getElementById('cmpTbody').innerHTML=rows.map(row=>{
+    const cells=[];
+    for(let i=0;i<3;i++){
+      if(!entries[i]){cells.push('<td>—</td>');continue;}
+      const v=entries[i].sc[row.k];
+      const best=v===maxK[row.k]&&entries.length>1;
+      cells.push(`<td style="${best?'background:#f0fdf4;':''}">`+
+        `<div class="bar-cmp"><div class="bar-cmp-tr"><div class="bar-cmp-fl" style="width:${v/row.m*100}%;background:${entries[i].color}"></div></div>`+
+        `<span style="font-size:11px;font-weight:700;color:${best?entries[i].color:'var(--navy)'};min-width:28px;text-align:right">${v}${best?' ★':''}</span></div></td>`);
+    }
+    return `<tr><td style="font-weight:700;color:var(--sub)">${row.l}</td><td style="color:var(--sub)">${row.m}점</td>${cells.join('')}</tr>`;
+  }).join('');
+  // 레이더 바
+  const barItems=[{l:'버크만 흥미',m:20,k:'interest'},{l:'버크만 성향',m:15,k:'style'},{l:'직업적성 핵심',m:55,k:'apt'},{l:'참고요인',m:10,k:'ref'}];
+  document.getElementById('radarBars').innerHTML=barItems.map(item=>`
+    <div class="radar-row">
+      <div class="radar-lbl">${item.l}<br><span style="font-size:9px;color:var(--sub)">/${item.m}점</span></div>
+      <div class="radar-bars">${entries.map(e=>`<div class="radar-bar-item"><div class="radar-bar-nm" style="color:${e.color}">${e.name.length>5?e.name.slice(0,5)+'…':e.name}</div><div class="radar-bar-tr"><div class="radar-bar-fl" style="width:${e.sc[item.k]/item.m*100}%;background:${e.color}"></div></div><div class="radar-bar-pts" style="color:${e.color}">${e.sc[item.k]}</div></div>`).join('')}</div>
+    </div>
+  `).join('');
+  document.getElementById('cmpResult').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+// ═══════════════════════════════════════════
+// 탭5: 네트워크
+// ═══════════════════════════════════════════
+const NET_GC={"구매/자재":"#3b82f6","현장생산":"#22c55e","품질":"#eab308","생산기획":"#10b981","기술지원":"#f97316","영업":"#a855f7","영업기획":"#8b5cf6","마케팅":"#ec4899","R&D":"#6366f1","IT":"#14b8a6","회계/재무":"#06b6d4","HR/총무":"#f59e0b","물류/납기":"#0ea5e9"};
+const NET_EDGES_RAW=[...SP_LIST,["구매파트","물류파트"],["구매파트","생산관리파트"],["물류파트","고객만족파트"],["물류파트","자재파트"],["실린더파트(조립)","밸브파트"],["실린더파트(조립)","공압품질경영팀"],["실린더파트(가공)","공압품질경영팀"],["밸브파트","공압품질경영팀"],["공압품질경영팀","밸브실린더기술파트"],["생산관리파트","영업기획파트"],["밸브실린더기술파트","특주개발기술파트"],["밸브실린더기술파트","생산기술파트"],["필드영업팀","프로젝트영업팀"],["필드영업팀","고객만족파트"],["필드영업팀","바이오3D"],["필드영업팀","해외영업팀"],["프로젝트영업팀","영업기획파트"],["내부회계파트","회계파트"],["내부회계파트","자금파트"],["인사총무파트","영업기획파트"],["구동기기개발팀","융합연구팀"],["구동기기개발팀","제어기기개발팀"],["디지털전략팀","영업기획파트"]];
+
+function initNet(){
+  const c=document.getElementById('netCanvas'); if(!c) return;
+  if(netAnimId){cancelAnimationFrame(netAnimId);netAnimId=null;}
+  netCanvas=c; netCtx=c.getContext('2d');
+  const W=c.parentElement.clientWidth||800;
+  c.width=W; c.height=500;
+  // 노드 배치
+  const GCenters={"구매/자재":{x:.12,y:.28},"물류/납기":{x:.12,y:.55},"현장생산":{x:.28,y:.42},"생산기획":{x:.28,y:.68},"품질":{x:.42,y:.32},"기술지원":{x:.56,y:.26},"영업":{x:.76,y:.34},"영업기획":{x:.73,y:.6},"마케팅":{x:.87,y:.55},"R&D":{x:.63,y:.72},"IT":{x:.83,y:.72},"회계/재무":{x:.18,y:.82},"HR/총무":{x:.4,y:.84}};
+  const cnt={};
+  netNodes={};
+  Object.keys(JD).forEach(j=>{
+    const g=JD[j].g; cnt[g]=(cnt[g]||0);
+    const total=Object.values(JD).filter(v=>v.g===g).length;
+    const gc=GCenters[g]||{x:.5,y:.5};
+    const angle=(cnt[g]/total)*Math.PI*2;
+    const r=48;
+    netNodes[j]={x:gc.x*W+Math.cos(angle)*r,y:gc.y*500+Math.sin(angle)*r,g:JD[j].g};
+    cnt[g]++;
+  });
+  netEdges=NET_EDGES_RAW.map(([a,b])=>({a,b,sp:isSP(a,b)}));
+  c.removeEventListener('mousedown',netMD);c.removeEventListener('mousemove',netMM);
+  c.removeEventListener('mouseup',netMU);c.removeEventListener('wheel',netWH);c.removeEventListener('click',netCL);
+  c.addEventListener('mousedown',netMD);c.addEventListener('mousemove',netMM);
+  c.addEventListener('mouseup',netMU);c.addEventListener('wheel',netWH,{passive:false});c.addEventListener('click',netCL);
+  drawNet();
+}
+function drawNet(){
+  if(!netCtx){return;}
+  netAnimId=requestAnimationFrame(drawNet);
+  const W=netCanvas.width,H=netCanvas.height;
+  netCtx.clearRect(0,0,W,H);
+  netCtx.save();
+  netCtx.translate(netPan.x,netPan.y);
+  netCtx.scale(netScale,netScale);
+  // 그리드
+  netCtx.strokeStyle='#f1f5f9';netCtx.lineWidth=1;
+  for(let x=0;x<W*2;x+=40){netCtx.beginPath();netCtx.moveTo(x,0);netCtx.lineTo(x,H*2);netCtx.stroke();}
+  for(let y=0;y<H*2;y+=40){netCtx.beginPath();netCtx.moveTo(0,y);netCtx.lineTo(W*2,y);netCtx.stroke();}
+  const showEdges=netFilter==='sp'?netEdges.filter(e=>e.sp):netEdges;
+  showEdges.forEach(e=>{
+    const a=netNodes[e.a],b=netNodes[e.b]; if(!a||!b) return;
+    const isHL=netSelected&&(e.a===netSelected||e.b===netSelected);
+    const alpha=netSelected?(isHL?1:.06):.55;
+    netCtx.beginPath();netCtx.moveTo(a.x,a.y);netCtx.lineTo(b.x,b.y);
+    netCtx.strokeStyle=e.sp?`rgba(124,58,237,${alpha})`:`rgba(148,163,184,${alpha})`;
+    netCtx.lineWidth=isHL?(e.sp?3:2):(e.sp?2:1);
+    netCtx.setLineDash(e.sp?[]:[4,4]);
+    netCtx.stroke();netCtx.setLineDash([]);
+  });
+  Object.entries(netNodes).forEach(([key,n])=>{
+    const isSel=key===netSelected;
+    const showEdgeList=netFilter==='sp'?netEdges.filter(e=>e.sp):netEdges;
+    const isConn=netSelected&&showEdgeList.some(e=>(e.a===netSelected&&e.b===key)||(e.b===netSelected&&e.a===key));
+    const alpha=netSelected?(isSel||isConn?1:.15):1;
+    const color=netFilter==='grp'?(NET_GC[n.g]||'#1F3864'):'#1F3864';
+    const r=isSel?22:15;
+    netCtx.globalAlpha=alpha;
+    netCtx.shadowColor='rgba(0,0,0,.15)';netCtx.shadowBlur=6;
+    netCtx.beginPath();netCtx.arc(n.x,n.y,r,0,Math.PI*2);
+    netCtx.fillStyle=isSel?'#fff':color;netCtx.fill();
+    netCtx.shadowBlur=0;
+    if(isSel){netCtx.strokeStyle=color;netCtx.lineWidth=3;netCtx.stroke();}
+    const hasSP=SP_LIST.some(([a,b])=>a===key||b===key);
+    if(hasSP){netCtx.beginPath();netCtx.arc(n.x,n.y,r+5,0,Math.PI*2);netCtx.strokeStyle=`rgba(124,58,237,${alpha*.7})`;netCtx.lineWidth=2;netCtx.stroke();}
+    const sn=key.length>6?key.slice(0,6)+'…':key;
+    netCtx.fillStyle=isSel?color:'rgba(255,255,255,.95)';
+    netCtx.font=`bold 7px 'Pretendard',sans-serif`;
+    netCtx.textAlign='center';netCtx.textBaseline='middle';
+    netCtx.fillText(sn,n.x,n.y);
+    if(isSel||isConn){
+      netCtx.fillStyle=color;netCtx.font=`600 9px 'Pretendard',sans-serif`;
+      netCtx.textAlign='center';netCtx.textBaseline='top';
+      netCtx.fillText(key.length>10?key.slice(0,10)+'…':key,n.x,n.y+r+4);
+    }
+    netCtx.globalAlpha=1;
+  });
+  netCtx.restore();
+}
+function toW(e){const r=netCanvas.getBoundingClientRect();return{wx:(e.clientX-r.left-netPan.x)/netScale,wy:(e.clientY-r.top-netPan.y)/netScale};}
+function netMD(e){const{wx,wy}=toW(e);for(const[k,n] of Object.entries(netNodes)){if(Math.hypot(wx-n.x,wy-n.y)<20){netDrag=k;netDragOff={x:wx-n.x,y:wy-n.y};return;}}netPanStart={x:e.clientX-netPan.x,y:e.clientY-netPan.y};}
+function netMM(e){
+  if(netDrag){const{wx,wy}=toW(e);netNodes[netDrag].x=wx-netDragOff.x;netNodes[netDrag].y=wy-netDragOff.y;return;}
+  if(netPanStart){netPan={x:e.clientX-netPanStart.x,y:e.clientY-netPanStart.y};return;}
+  const{wx,wy}=toW(e);const tip=document.getElementById('netTip');let found=false;
+  for(const[k,n] of Object.entries(netNodes)){
+    if(Math.hypot(wx-n.x,wy-n.y)<20){
+      const conns=NET_EDGES_RAW.filter(([a,b])=>a===k||b===k).length;
+      const spC=SP_LIST.filter(([a,b])=>a===k||b===k).length;
+      tip.style.display='block';tip.style.left=(e.offsetX+16)+'px';tip.style.top=(e.offsetY-10)+'px';
+      tip.innerHTML=`<b>${DN[k]||k}</b><br>직무군: ${JD[k]?.g||'—'}<br>연결: ${conns}개${spC?`<br>⭐ 전략순환: ${spC}개`:''}`;
+      found=true;break;
+    }
+  }
+  if(!found) tip.style.display='none';
+}
+function netMU(){netDrag=null;netPanStart=null;}
+function netWH(e){e.preventDefault();const d=e.deltaY>0?.9:1.1;netScale=Math.min(3,Math.max(.3,netScale*d));}
+function netCL(e){
+  const{wx,wy}=toW(e);
+  for(const[k,n] of Object.entries(netNodes)){
+    if(Math.hypot(wx-n.x,wy-n.y)<20){
+      netSelected=netSelected===k?null:k;
+      if(netSelected){document.getElementById('s-from').value=netSelected;calc();}
+      return;
+    }
+  }
+  netSelected=null;
+}
+function setNF(f){
+  netFilter=f;
+  ['all','sp','grp'].forEach(k=>document.getElementById('nf-'+k)?.classList.toggle('on',k===f));
+}
+function resetNet(){netScale=1;netPan={x:0,y:0};netSelected=null;}
+
+// ═══════════════════════════════════════════
+// 저장 / 불러오기
+// ═══════════════════════════════════════════
+function save(){
+  try{localStorage.setItem(STORAGE_KEY,JSON.stringify({poolData,savedAt:new Date().toISOString()}));updateDataStatus();}
+  catch(e){console.warn(e);}
+}
+function load(){
+  try{
+    const raw=localStorage.getItem(STORAGE_KEY);if(!raw)return;
+    const d=JSON.parse(raw);
+    if(d.poolData&&Array.isArray(d.poolData)){poolData=d.poolData;renderPool();updateStats();}
+    updateDataStatus();
+  }catch(e){console.warn('불러오기 실패:',e);}
+}
+function updateDataStatus(){
+  const el=document.getElementById('dataStatus');if(!el)return;
+  const raw=localStorage.getItem(STORAGE_KEY);
+  if(raw){
+    try{const d=JSON.parse(raw);const t=new Date(d.savedAt);el.textContent=`마지막 저장: ${t.getMonth()+1}/${t.getDate()} ${t.getHours()}:${String(t.getMinutes()).padStart(2,'0')} · ${poolData.length}명`;}
+    catch(e){el.textContent='저장된 데이터 없음';}
+  }else{el.textContent=poolData.length?`${poolData.length}명 (미저장)`:'저장된 데이터 없음';}
+}
+function exportJSON(){
+  const blob=new Blob([JSON.stringify({version:'1.0',exportedAt:new Date().toISOString(),poolData},null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`직무전환_데이터_${new Date().toISOString().slice(0,10)}.json`;a.click();URL.revokeObjectURL(a.href);
+  toast('📥 JSON 저장 완료!');
+}
+function importJSON(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const d=JSON.parse(e.target.result);
+      if(!d.poolData)throw new Error('올바른 형식이 아닙니다');
+      if(!confirm(`${d.poolData.length}명 데이터를 불러올까요? 현재 데이터는 덮어씌워져요.`))return;
+      poolData=d.poolData;renderPool();updateStats();save();
+      toast(`📂 ${d.poolData.length}명 복원 완료!`);sw('pool');
+    }catch(err){alert('오류: '+err.message);}
+    input.value='';
+  };
+  reader.readAsText(file);
+}
+function exportCSV(){
+  if(!poolData.length){alert('등록된 대상자가 없습니다.');return;}
+  const h=['No.','성명','소속','FROM','TO','총점','판정','전략순환','NCS','비고'];
+  const rows=poolData.map((d,i)=>[i+1,d.name,d.dept,DN[d.from]||d.from,DN[d.to]||d.to,d.score,d.verdict,d.sp?'전략순환':'',d.ncs,d.note].map(v=>`"${String(v||'').replace(/"/g,'""')}"`).join(','));
+  const csv='\uFEFF'+[h.join(','),...rows].join('\n');
+  const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);a.download=`직무전환_POOL_${new Date().toISOString().slice(0,10)}.csv`;a.click();
+  toast('📊 CSV 다운로드 완료!');
+}
+function resetAll(){
+  if(!confirm('모든 데이터를 삭제할까요? 되돌릴 수 없어요.'))return;
+  poolData=[];localStorage.removeItem(STORAGE_KEY);renderPool();updateStats();updateDataStatus();toast('🗑 초기화 완료');
+}
+
+// ═══════════════════════════════════════════
+// 하단 렌더링
+// ═══════════════════════════════════════════
+// 전략순환 경로
+const pl=document.getElementById('pathList');
+SP_LIST.forEach(([a,b])=>{
+  const item=document.createElement('div');item.className='path-item';
+  item.innerHTML=`<span class="pf">${SN[a]||a}</span><span class="pa">↔</span><span class="pt">${SN[b]||b}</span><span class="pb">전략순환</span>`;
+  item.onclick=()=>{document.getElementById('s-from').value=a;document.getElementById('s-to').value=b;sw('explore');calc();};
+  pl.appendChild(item);
+});
+// 직무군 그리드
+const jg=document.getElementById('jobGrid');
+Object.entries(JD).forEach(([k,v])=>{
+  const t=document.createElement('div');t.className='job-tag';
+  t.textContent=k.length>7?k.slice(0,7)+'…':k;t.title=DN[k]||k;
+  t.style.background=GC[v.g]||'#f1f5f9';t.style.color=GTC[v.g]||'#334155';t.style.borderColor=(GTC[v.g]||'#ccc')+'44';
+  t.onclick=()=>{document.getElementById('s-from').value=k;sw('explore');calc();};
+  jg.appendChild(t);
+});
+// 범례
+const lg=document.getElementById('jobLeg');
+const seen=new Set();
+Object.values(JD).forEach(v=>{
+  if(seen.has(v.g))return;seen.add(v.g);
+  const item=document.createElement('div');item.className='leg-item';
+  item.innerHTML=`<div class="leg-dot" style="background:${GC[v.g]};border:1px solid ${GTC[v.g]}44"></div>${v.g}`;
+  lg.appendChild(item);
+});
+
+// ═══════════════════════════════════════════
+// 초기화
+// ═══════════════════════════════════════════
+load();
+updateDataStatus();
+</script>
+</body>
+</html>
