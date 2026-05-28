@@ -290,7 +290,7 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(7
 
 <!-- 데이터 관리 바 -->
 <div class="data-bar">
-  <span class="data-bar-label">💾 데이터 관리</span>
+  <span class="data-bar-label">☁️ Google Sheets 연동</span>
   <button class="db-btn save" onclick="exportJSON()">📥 JSON 저장</button>
   <button class="db-btn save" onclick="document.getElementById('jsonInput').click()">📂 JSON 불러오기</button>
   <button class="db-btn save" onclick="exportCSV()">📊 CSV 내보내기</button>
@@ -665,6 +665,7 @@ const GTC = {"구매/자재":"#1d4ed8","현장생산":"#16a34a","품질":"#ca8a0
 const APTS = ["언어력","수리력","추리력","공간지각력","사물지각력","상황판단력","기계능력","집중력","색채지각력","문제해결능력","사고유창력"];
 const CCOLORS = ['#4f8ef7','#00c6a2','#f59e0b'];
 const STORAGE_KEY = 'tpc_dash_v2';
+const SHEET_URL = 'https://script.google.com/macros/s/AKfycby1J06B-kfNyL4gMQ3ZyoXqkWE8bRjvxlWikFMZnym6tXmGuvPfpU9_b3e5ehiaNFu9eA/exec';
 
 // ═══════════════════════════════════════════
 // 상태 변수
@@ -1213,24 +1214,77 @@ function resetNet(){netScale=1;netPan={x:0,y:0};netSelected=null;}
 // 저장 / 불러오기
 // ═══════════════════════════════════════════
 function save(){
-  try{localStorage.setItem(STORAGE_KEY,JSON.stringify({poolData,savedAt:new Date().toISOString()}));updateDataStatus();}
+  // localStorage 백업
+  try{localStorage.setItem(STORAGE_KEY,JSON.stringify({poolData,savedAt:new Date().toISOString()}));}
   catch(e){console.warn(e);}
+  // Google Sheets 저장
+  const body = JSON.stringify({
+    action: 'save',
+    pool: poolData.map(d=>({...d, savedAt: new Date().toISOString()}))
+  });
+  fetch(SHEET_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: {'Content-Type':'application/json'},
+    body
+  }).then(()=>{
+    updateDataStatus();
+    toast('☁️ Google Sheets에 저장됐어요!');
+  }).catch(e=>console.warn('Sheets 저장 실패:',e));
 }
 function load(){
+  // Google Sheets에서 불러오기
+  updateDataStatus('⏳ 불러오는 중...');
+  fetch(SHEET_URL)
+    .then(r=>r.json())
+    .then(d=>{
+      if(d.status==='ok' && d.pool && d.pool.length){
+        poolData = d.pool.map(row=>({
+          id: row.id || Date.now(),
+          name: row.name||'',
+          dept: row.dept||'',
+          from: row.from||'',
+          to: row.to||'',
+          score: parseInt(row.score)||0,
+          verdict: row.verdict||'',
+          sp: row.sp==='true'||row.sp===true,
+          ncs: row.ncs||'',
+          note: row.note||'',
+        }));
+        // localStorage에도 백업
+        try{localStorage.setItem(STORAGE_KEY,JSON.stringify({poolData,savedAt:new Date().toISOString()}));}catch(e){}
+        renderPool(); updateStats(); updateDataStatus();
+        toast('☁️ 데이터 불러오기 완료!');
+      } else {
+        // Sheets가 비어있으면 localStorage에서 복원
+        loadFromLocal();
+      }
+    })
+    .catch(e=>{
+      console.warn('Sheets 불러오기 실패, localStorage 사용:', e);
+      loadFromLocal();
+    });
+}
+
+function loadFromLocal(){
   try{
     const raw=localStorage.getItem(STORAGE_KEY);if(!raw)return;
     const d=JSON.parse(raw);
     if(d.poolData&&Array.isArray(d.poolData)){poolData=d.poolData;renderPool();updateStats();}
     updateDataStatus();
-  }catch(e){console.warn('불러오기 실패:',e);}
+  }catch(e){console.warn(e);}
 }
-function updateDataStatus(){
+function updateDataStatus(msg){
   const el=document.getElementById('dataStatus');if(!el)return;
-  const raw=localStorage.getItem(STORAGE_KEY);
-  if(raw){
-    try{const d=JSON.parse(raw);const t=new Date(d.savedAt);el.textContent=`마지막 저장: ${t.getMonth()+1}/${t.getDate()} ${t.getHours()}:${String(t.getMinutes()).padStart(2,'0')} · ${poolData.length}명`;}
-    catch(e){el.textContent='저장된 데이터 없음';}
-  }else{el.textContent=poolData.length?`${poolData.length}명 (미저장)`:'저장된 데이터 없음';}
+  if(msg){el.textContent=msg;return;}
+  if(poolData.length){
+    const now=new Date();
+    el.textContent=`☁️ ${now.getMonth()+1}/${now.getDate()} ${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')} 저장 · ${poolData.length}명`;
+    el.style.color='rgba(134,239,172,.9)';
+  }else{
+    el.textContent='저장된 데이터 없음';
+    el.style.color='rgba(255,255,255,.4)';
+  }
 }
 function exportJSON(){
   const blob=new Blob([JSON.stringify({version:'1.0',exportedAt:new Date().toISOString(),poolData},null,2)],{type:'application/json'});
