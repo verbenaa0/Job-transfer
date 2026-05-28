@@ -275,11 +275,45 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(7
 
 /* 추가 모달 */
 .add-modal{background:#fff;border-radius:16px;width:90%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3);}
+
+  /* 로그인 화면 */
+  .login-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:var(--navy);z-index:9999;display:flex;align-items:center;justify-content:center;}
+  .login-box{background:#fff;border-radius:20px;padding:40px;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,.3);text-align:center;}
+  .login-logo{width:52px;height:52px;background:var(--accent);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#fff;margin:0 auto 16px;}
+  .login-title{font-size:18px;font-weight:800;color:var(--navy);margin-bottom:4px;}
+  .login-sub{font-size:12px;color:var(--sub);margin-bottom:28px;}
+  .login-field{display:flex;flex-direction:column;gap:4px;margin-bottom:12px;text-align:left;}
+  .login-lbl{font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;}
+  .login-in{border:2px solid var(--border);border-radius:10px;padding:11px 14px;font-size:14px;font-family:inherit;width:100%;transition:border-color .2s;}
+  .login-in:focus{outline:none;border-color:var(--accent);}
+  .login-btn{background:var(--navy);color:#fff;border:none;border-radius:10px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-top:8px;transition:all .2s;}
+  .login-btn:hover{background:var(--navy2);}
+  .login-err{color:#dc2626;font-size:12px;font-weight:600;margin-top:8px;display:none;}
 </style>
 </head>
 <body>
 
 <!-- 헤더 -->
+
+<!-- 로그인 화면 -->
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-box">
+    <div class="login-logo">T</div>
+    <div class="login-title">직무전환 대시보드</div>
+    <div class="login-sub">TPC로보틱스 · 인사총무팀 · 접근 제한 페이지</div>
+    <div class="login-field">
+      <div class="login-lbl">아이디</div>
+      <input class="login-in" id="loginId" type="text" placeholder="아이디 입력" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <div class="login-field">
+      <div class="login-lbl">비밀번호</div>
+      <input class="login-in" id="loginPw" type="password" placeholder="비밀번호 입력" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="login-btn" onclick="doLogin()">로그인</button>
+    <div class="login-err" id="loginErr">아이디 또는 비밀번호가 올바르지 않습니다</div>
+  </div>
+</div>
+
 <div class="hdr">
   <div class="hdr-left">
     <div class="logo">T</div>
@@ -585,6 +619,39 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(7
 <div class="toast" id="toast"></div>
 
 <script>
+
+// ═══════════════════════════════════════════
+// 로그인
+// ═══════════════════════════════════════════
+const USERS = [
+  {id:'admin', pw:'admintpcr!'},
+];
+
+function doLogin(){
+  const id = document.getElementById('loginId').value.trim();
+  const pw = document.getElementById('loginPw').value;
+  const err = document.getElementById('loginErr');
+  const user = USERS.find(u => u.id===id && u.pw===pw);
+  if(user){
+    document.getElementById('loginOverlay').style.display='none';
+    sessionStorage.setItem('tpc_auth','1');
+    load();
+  } else {
+    err.style.display='block';
+    document.getElementById('loginPw').value='';
+    document.getElementById('loginPw').focus();
+  }
+}
+
+function checkAuth(){
+  if(sessionStorage.getItem('tpc_auth')==='1'){
+    document.getElementById('loginOverlay').style.display='none';
+    load();
+  } else {
+    setTimeout(()=>document.getElementById('loginId').focus(), 100);
+  }
+}
+
 // ═══════════════════════════════════════════
 // 데이터
 // ═══════════════════════════════════════════
@@ -919,12 +986,46 @@ function updatePdfPreview(){
 }
 function printPdf(){
   updatePdfPreview();
-  const doc=document.getElementById('pdfDoc');
-  const w=window.open('','_blank');
-  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>직무전환 결과서</title><style>*{margin:0;padding:0;box-sizing:border-box;}body{font-family:'Malgun Gothic',sans-serif;font-size:11px;color:#1a202c;padding:20px;}@media print{body{padding:0;}}@page{margin:12mm;size:A4;}</style></head><body>`);
-  w.document.write(doc.outerHTML);
-  w.document.write(`</body></html>`);
-  w.document.close();setTimeout(()=>w.print(),400);
+  const doc = document.getElementById('pdfDoc');
+  const w = window.open('','_blank');
+  w.document.write(`<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>직무전환 적합성 결과서</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Noto Sans KR','Malgun Gothic',sans-serif;font-size:11px;color:#1a202c;background:#fff;padding:24px;}
+@media print{body{padding:0;}@page{margin:12mm;size:A4;}}
+.pdf-doc{max-width:700px;margin:0 auto;}
+.pdf-hdr-bar{background:#1F3864;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;border-radius:6px 6px 0 0;margin-bottom:20px;}
+.pdf-hdr-t{font-size:16px;font-weight:800;color:#fff;}
+.pdf-hdr-s{font-size:10px;color:rgba(255,255,255,.6);margin-top:2px;}
+.pdf-sec-t{font-size:10px;font-weight:700;color:#1F3864;text-transform:uppercase;letter-spacing:.8px;border-bottom:1.5px solid #1F3864;padding-bottom:3px;margin:16px 0 8px;}
+.fg-2col{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.pdf-field{display:flex;gap:8px;margin-bottom:4px;align-items:baseline;}
+.pdf-fl{font-size:9px;color:#64748b;font-weight:600;min-width:60px;}
+.pdf-fv{font-size:11px;font-weight:600;}
+.pdf-path{background:linear-gradient(135deg,#eff6ff,#f0fdf4);border:1px solid #e2e8f0;border-radius:8px;padding:12px 16px;display:flex;align-items:center;gap:14px;}
+.pdf-sc-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.pdf-sc-lbl{font-size:10px;font-weight:600;min-width:100px;color:#374151;}
+.pdf-sc-tr{flex:1;height:8px;background:#e2e8f0;border-radius:99px;overflow:hidden;}
+.pdf-sc-fl{height:100%;border-radius:99px;}
+.pdf-sc-pts{font-size:10px;font-weight:700;min-width:44px;text-align:right;color:#1F3864;}
+.pdf-total{background:#1F3864;border-radius:8px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;margin-top:8px;}
+.verdict{padding:5px 14px;border-radius:20px;font-size:11px;font-weight:700;}
+.pdf-result-opts{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;}
+.pdf-opt{border:1.5px solid #e2e8f0;border-radius:7px;padding:8px 4px;font-size:10px;font-weight:600;color:#64748b;text-align:center;}
+.pdf-opt.on{border-color:#1F3864;background:#1F3864;color:#fff;}
+.pdf-sign{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.pdf-sign-box{border:1px solid #e2e8f0;border-radius:7px;padding:10px 12px;text-align:center;}
+.pdf-sign-role{font-size:9px;color:#64748b;font-weight:600;margin-bottom:16px;}
+.pdf-sign-line{border-bottom:1px solid #e2e8f0;margin-bottom:4px;height:22px;}
+.opinion-box{border:1px solid #e2e8f0;border-radius:7px;padding:10px 12px;min-height:44px;font-size:10px;color:#374151;line-height:1.6;}
+.sp-tag{background:#ede9fe;color:#7c3aed;font-size:10px;font-weight:700;padding:3px 8px;border-radius:10px;}
+</style></head><body><div class="pdf-doc">`);
+  w.document.write(doc.innerHTML);
+  w.document.write(`</div></body></html>`);
+  w.document.close();
+  setTimeout(()=>{ w.focus(); w.print(); }, 600);
 }
 
 // ═══════════════════════════════════════════
@@ -1352,7 +1453,7 @@ Object.values(JD).forEach(v=>{
 // ═══════════════════════════════════════════
 // 초기화
 // ═══════════════════════════════════════════
-load();
+checkAuth();
 updateDataStatus();
 </script>
 </body>
